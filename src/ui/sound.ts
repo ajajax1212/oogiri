@@ -84,20 +84,27 @@ const SFX: Record<SfxName, SfxSpec> = {
  * 音源ファイル。**ページを開いただけでは取りに行かない。**
  * 音を入れた人の操作を待ってから読む（SPEC.md §10.3）。
  *
- * 素材ごとに素のピークがばらつくので、`gain` は「狙いのピーク ÷ 実測ピーク」。
+ * 素材ごとに素のピークがばらつくので、`gain` は「`SFX` の `peak` ÷ 実測ピーク」。
  * 同じ数字を全部に掛けると音量が揃わない。ここに無い音は合成音で鳴る。
+ *
+ * **実測ピークは decode して測った値**（括弧内）。目分量で決めると、
+ * 判定の4つのように素材が揃って大きいときに、そこだけ殴られる感じになる。
+ * この式で入れておくと、音源が読めずに合成音へ落ちても大きさが変わらない。
+ * 測り直すときは decodeAudioData して全チャンネルの平均の絶対値の最大を取る。
  */
 const FILES: Partial<Record<SfxName, { url: string; gain: number }>> = {
-  strike: { url: '/sfx/strike.mp3', gain: 0.9 },
+  strike: { url: '/sfx/strike.mp3', gain: 0.9 },   // 実測 0.28
   // 本人が用意した「和太鼓でドン」。宣言の一打がこれまで合成音だけだった
-  declare: { url: '/sfx/declare.mp3', gain: 0.6 },
-  lift: { url: '/sfx/lift.mp3', gain: 0.9 },
-  tally: { url: '/sfx/tally.mp3', gain: 0.5 },
-  // 判定の4つは素材が他より大きく、そのままだと殴られる感じになる。半分に落とす
-  small: { url: '/sfx/small.wav', gain: 0.35 },
-  medium: { url: '/sfx/medium.wav', gain: 0.4 },
-  big: { url: '/sfx/big.wav', gain: 0.45 },
-  perfect: { url: '/sfx/perfect.wav', gain: 0.5 },
+  declare: { url: '/sfx/declare.mp3', gain: 0.6 }, // 実測 0.33
+  lift: { url: '/sfx/lift.mp3', gain: 0.9 },       // 実測 0.44
+  tally: { url: '/sfx/tally.mp3', gain: 0.5 },     // 実測 0.43
+  // 判定の4つだけ素材が飛び抜けて大きい（実測 0.76〜0.95。他は 0.28〜0.44）。
+  // 目分量で半分にしてもまだ他より大きかったので、上の式どおりに入れ直した。
+  // 中が大より大きいという逆転もここで直る（素材は medium がいちばん大きい）
+  small: { url: '/sfx/small.wav', gain: 0.17 },    // 実測 0.76
+  medium: { url: '/sfx/medium.wav', gain: 0.20 },  // 実測 0.89
+  big: { url: '/sfx/big.wav', gain: 0.31 },        // 実測 0.77
+  perfect: { url: '/sfx/perfect.wav', gain: 0.34 },// 実測 0.95
 };
 
 const buffers = new Map<SfxName, AudioBuffer>();
