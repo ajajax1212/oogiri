@@ -20,6 +20,19 @@
 **オンラインの動作確認に `npm run dev` を使わない。** 部屋が作れない。
 `npm.cmd run build && npm.cmd start` で立てて、**複数タブで実際に触る。**
 
+## デプロイ
+
+リモートは `github.com/ajajax1212/oogiri`（**リポジトリ名は `oogiri`**。ディレクトリ名と違う）。
+GitHub → Render の無料プラン。`render.yaml` を同梱してある。
+
+- **push は自分の判断でしてよい。** ただし **push すると Render が自動でビルドして本番に出る**ので、
+  先に `npm.cmd run build` と `npm.cmd test` を通してから push する。
+- **ビルドは `npm ci --include=dev`。** Render は `NODE_ENV=production` を既定で入れるので、
+  これを明示しないと `vite` と `tsc` が入らないままビルドに入って落ちる。
+- 無料プランなのでスリープする。しばらく触っていないと初回だけ30秒ほど待たされる。
+- 部屋の状態はメモリにしかない。インスタンスが落ちれば進行中のゲームは消える（許容している）。
+- push 前に `public/` を追跡し損ねていないか見る。抜けると**本番だけ音が404**になる。
+
 ## 構造
 
 ```
@@ -32,12 +45,13 @@ src/engine/   ゲームのルール。React も Socket.IO も知らない純粋�
 src/net/
   events.ts   EV の唯一の定義 + 入力の検証
   useRoom.ts  接続・再接続・状態受信
-src/ui/       App / Lobby / Game / FlipEditor / Flip / styles.css
+src/ui/       App / Lobby / Game / FlipEditor / Flip / TopicForm / sound.ts / styles.css
 server/
   index.ts    Socket.IO のハンドラ。reducer と viewFor を呼ぶだけ
   rooms.ts    部屋・席・token・タイマー。ルールは持たない
   topicData.ts  素材ファイルの読み込み（engine を純粋に保つため server 側）
-data/topics/  patterns.json（骨格57本）と words/*.json（素材）
+data/topics/  patterns.json（骨格60本）と words/*.json（素材）
+public/sfx/   配る音源。生の置き場は sound/（追跡外）
 ```
 
 ### 層の境界を守る
@@ -69,6 +83,16 @@ data/topics/  patterns.json（骨格57本）と words/*.json（素材）
 - **満点大笑いの回数以外の得点を持たない。** 順位を出すと面白さの判断が数字に寄る。
 - **投稿されたお題の本文は、出した本人にしか配らない。** 件数だけ全員に見せる。
   出るまで知らないから面白い（TOPIC-GEN.md §9.1）。
+- **効果音は音源ファイルを鳴らし、読めなければ合成音に落ちる。**
+  `src/ui/sound.ts` の合成音（tone / noise / taiko / metal / bell と `synth`）は**消さない**。
+  取得に失敗してもオフラインでも鳴らすための保険。**既定はオフで、音を入れた操作の
+  あとで初めて取りに行く**（開いただけでは読まない）。音量は `SFX` の表と `MASTER` で決め、
+  素材ごとに素のピークが違うので `gain` は音ごとに別。全体を動かすときは `MASTER` だけ。
+- **`sound/` は追跡外**（生のダウンロード置き場）。配るのは `public/sfx/` の方だけ。
+- **AudioContext はユーザー操作の中でしか作らない。** ブラウザが自動再生を止めるので、
+  音を入れるトグルを押した瞬間が唯一の機会。
+- **音は「場面が変わったとき」だけ鳴らす。** 「今この phase だから鳴らす」にすると、
+  再接続やリロードで状態を受け直しただけで鳴る。
 - お題の素材と骨格を触るときは `docs/TOPIC-GEN.md` §5.2 の役割（roles）を読む。
   `cat` と `tags` だけでは文法が守れない。
 
@@ -77,4 +101,4 @@ data/topics/  patterns.json（骨格57本）と words/*.json（素材）
 - **ルールやバランスを勝手に変えない。** 面白さの判断は本人がする。
   実装上おかしいと思ったら、直す前に指摘する。
 - `dist/` `dist-server/` をコミットしない。
-- **GitHub にリポジトリを勝手に作らない。** push は明示的に言われたときだけ。
+- **GitHub にリポジトリを勝手に作らない。** 新規リポジトリの作成は本人が GitHub 上でやる。
