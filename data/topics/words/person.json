@@ -1,0 +1,667 @@
+{
+  "cat": "person",
+  "note": "骨格を読むための下見用。各カテゴリ30語前後しか無い。TOPIC-GEN.md §12 の通り、素材を増やすのは骨格の当たり外れを決めた後。",
+  "words": [
+    {
+      "id": "pe-01",
+      "word": "部長",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-02",
+      "word": "新人",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-03",
+      "word": "課長",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-04",
+      "word": "面接官",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "guest"
+      ]
+    },
+    {
+      "id": "pe-05",
+      "word": "姑",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-06",
+      "word": "双子の兄",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-07",
+      "word": "幼なじみ",
+      "tags": [
+        "近所"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-08",
+      "word": "元カレ",
+      "tags": [
+        "近所"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-09",
+      "word": "校長",
+      "tags": [
+        "学校"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-10",
+      "word": "保健室の先生",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-12",
+      "word": "番長",
+      "tags": [
+        "学校"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-13",
+      "word": "給食のおばさん",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-14",
+      "word": "教習所の教官",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-15",
+      "word": "バスの運転手",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-16",
+      "word": "サンタクロース",
+      "tags": [
+        "非日常",
+        "儀式"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-17",
+      "word": "忍者",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-18",
+      "word": "侍",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-19",
+      "word": "宇宙人",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-20",
+      "word": "神様",
+      "tags": [
+        "非日常",
+        "儀式"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-21",
+      "word": "妖精",
+      "tags": [
+        "非日常",
+        "自然"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-22",
+      "word": "幽霊",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-23",
+      "word": "ロボット",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-24",
+      "word": "名探偵",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-25",
+      "word": "占い師",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-27",
+      "word": "町内会長",
+      "tags": [
+        "近所"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-28",
+      "word": "執事",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-29",
+      "word": "住職",
+      "tags": [
+        "儀式",
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-30",
+      "word": "主治医",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-31",
+      "word": "助っ人外国人",
+      "tags": [
+        "運動"
+      ],
+      "level": 2,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-33",
+      "word": "教頭",
+      "tags": [
+        "学校"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-34",
+      "word": "担任の先生",
+      "tags": [
+        "学校"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-33",
+      "word": "社長",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-34",
+      "word": "経理の人",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-35",
+      "word": "派遣社員",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-36",
+      "word": "取引先の担当",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "guest"
+      ]
+    },
+    {
+      "id": "pe-37",
+      "word": "用務員",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-38",
+      "word": "転校生",
+      "tags": [
+        "学校"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-39",
+      "word": "PTA会長",
+      "tags": [
+        "学校"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-40",
+      "word": "塾講師",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-41",
+      "word": "義理の父",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-42",
+      "word": "義理の妹",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-43",
+      "word": "祖父",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-44",
+      "word": "隣の住人",
+      "tags": [
+        "近所"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-45",
+      "word": "郵便配達員",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-46",
+      "word": "犬の散歩の人",
+      "tags": [
+        "近所"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-47",
+      "word": "店長",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-48",
+      "word": "レジの人",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-49",
+      "word": "板前",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-50",
+      "word": "美容師",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-51",
+      "word": "看護師",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-52",
+      "word": "歯医者",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-53",
+      "word": "薬剤師",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-54",
+      "word": "添乗員",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-55",
+      "word": "仲居",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-56",
+      "word": "登山家",
+      "tags": [
+        "旅"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-57",
+      "word": "農家",
+      "tags": [
+        "自然"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-58",
+      "word": "漁師",
+      "tags": [
+        "自然"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-59",
+      "word": "神主",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-60",
+      "word": "巫女",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-61",
+      "word": "魔法使い",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-62",
+      "word": "王様",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-63",
+      "word": "錬金術師",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-64",
+      "word": "吸血鬼",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-65",
+      "word": "パイロット",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-66",
+      "word": "車掌",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-67",
+      "word": "タクシー運転手",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-68",
+      "word": "監督",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    },
+    {
+      "id": "pe-69",
+      "word": "補欠",
+      "tags": [
+        "運動"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pe-70",
+      "word": "審判",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "trade"
+      ]
+    }
+  ]
+}

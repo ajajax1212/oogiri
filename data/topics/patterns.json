@@ -1,0 +1,1406 @@
+{
+  "version": 1,
+  "note": "お題の骨格。TOPIC-GEN.md §2.1 の重みに合わせて本数を配分してある。why はなぜこの骨格を置いたか（消すか残すかを後で判断するため）。",
+  "slotCats": {
+    "PERSON": "person",
+    "PERSON2": "person",
+    "PLACE": "place",
+    "ORG": "org",
+    "THING": "thing",
+    "ACT": "act",
+    "ATTR": "attr",
+    "TIME": "time",
+    "GUISE": "guise",
+    "PGUISE": "pguise",
+    "STAFF": "staff"
+  },
+  "patterns": [
+    {
+      "id": "ac-01",
+      "type": "act",
+      "template": "{PLACE}で{PERSON}と二人きりになった。{E}",
+      "slots": [
+        "PLACE",
+        "PERSON"
+      ],
+      "endings": [
+        "どうする？",
+        "何をして過ごす？",
+        "第一手は？"
+      ],
+      "maxLen": 36,
+      "why": "回答者を当事者にする唯一の型。他が三人称なので、視点が変わること自体が新鮮味になるか見る"
+    },
+    {
+      "id": "ac-05",
+      "type": "act",
+      "template": "その昔、{PERSON}が{ORG}に就職した初日。{E}",
+      "slots": [
+        "PERSON",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "何をやらかした？"
+        },
+        {
+          "text": "何があった？"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "noplace",
+          "sells_street"
+        ],
+        "PERSON": [
+          "trade"
+        ]
+      },
+      "maxLen": 36,
+      "why": "wh-03 を理由型へ移したぶんの補充。「初日」で時を固定すると、答えが失敗談・勘違い・張り切りに散る"
+    },
+    {
+      "id": "ac-06",
+      "type": "act",
+      "template": "{PLACE}で{PERSON}が土下座している。{E}",
+      "slots": [
+        "PLACE",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "なぜ？"
+        },
+        {
+          "text": "何があった？"
+        }
+      ],
+      "maxLen": 40,
+      "why": "ac-02（落として行ってしまった）が「意図が見えない」で落ちた代わり。土下座は姿勢だけで情景が立つので、前振りが短くても状況が伝わる"
+    },
+    {
+      "id": "ac-07",
+      "type": "act",
+      "template": "{PGUISE}{ORG}で{PERSON}が新記録を出した。{E}",
+      "slots": [
+        "PGUISE",
+        "ORG",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "何の記録？"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "noplace"
+        ],
+        "PGUISE": [
+          "biz"
+        ]
+      },
+      "maxLen": 44,
+      "why": "行為・展開型が3本しかなく ac-01 ばかり出ていたので補充。「記録」は数字の話に見えて何でも入るので幅が広い",
+      "denyTags": {
+        "ORG": [
+          "非日常"
+        ],
+        "PERSON": [
+          "非日常"
+        ]
+      }
+    },
+    {
+      "id": "ac-08",
+      "type": "act",
+      "template": "{PLACE}で{PERSON}と{PERSON2}が言い争っている。{E}",
+      "slots": [
+        "PLACE",
+        "PERSON",
+        "PERSON2"
+      ],
+      "endings": [
+        {
+          "text": "何で揉めている？"
+        }
+      ],
+      "pair": "far",
+      "maxLen": 42,
+      "why": "人を2人出す唯一の骨格。遠い世界の2人がぶつかるほど面白いので pair は far"
+    },
+    {
+      "id": "ac-09",
+      "type": "act",
+      "template": "{PLACE}で{PERSON}が全力で走っている。{E}",
+      "slots": [
+        "PLACE",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "何から逃げている？"
+        },
+        {
+          "text": "なぜ？"
+        }
+      ],
+      "maxLen": 40,
+      "why": "土下座（ac-06）と同じく、姿勢だけで情景が立つ型。逃走という含みが答えを引っ張る"
+    },
+    {
+      "id": "at-01",
+      "type": "attr",
+      "template": "{PERSON}が経営している{ORG}。{E}",
+      "slots": [
+        "PERSON",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "どんな{ORG}？",
+          "fallback": "どんなの？"
+        },
+        {
+          "text": "どういう{ORG}？",
+          "fallback": "どんなの？"
+        },
+        {
+          "text": "何がおかしい？"
+        }
+      ],
+      "maxLen": 36,
+      "why": "属性型の王道。人と組織のズレだけで回答が無限に出る。この骨格が滑るなら素材が悪い、という判定に使える基準線",
+      "deny": {
+        "ORG": [
+          "noplace",
+          "official"
+        ]
+      }
+    },
+    {
+      "id": "at-02",
+      "type": "attr",
+      "template": "{TIME}にしか営業していない{ORG}。{E}",
+      "slots": [
+        "TIME",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "何を売っている？",
+          "require": {
+            "ORG": [
+              "sells"
+            ]
+          }
+        },
+        {
+          "text": "客は誰？"
+        }
+      ],
+      "maxLen": 36,
+      "why": "時間を制約に使う型。at-01 が人で絞るのに対しこちらは時で絞る。どちらが答えやすいかを比べる",
+      "deny": {
+        "ORG": [
+          "noplace",
+          "official"
+        ]
+      }
+    },
+    {
+      "id": "at-03",
+      "type": "attr",
+      "template": "{PERSON}にだけ売れている{THING}。{E}",
+      "slots": [
+        "PERSON",
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "どんな{THING}？",
+          "fallback": "どんなの？"
+        },
+        {
+          "text": "どこがすごい？"
+        }
+      ],
+      "maxLen": 36,
+      "why": "「にだけ」で対象を絞る言い回しの検証。同じ言い回しを st-02 でも使っているので、被って見えないかを確かめる",
+      "noBrought": true,
+      "deny": {
+        "THING": [
+          "nonproduct"
+        ]
+      }
+    },
+    {
+      "id": "at-04",
+      "type": "attr",
+      "template": "{PGUISE}{PLACE}で拾った{THING}。{E}",
+      "slots": [
+        "PGUISE",
+        "PLACE",
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "どんな{THING}？",
+          "fallback": "どんなの？"
+        },
+        {
+          "text": "何が書いてあった？",
+          "require": {
+            "THING": [
+              "written"
+            ]
+          }
+        }
+      ],
+      "maxLen": 42,
+      "why": "語尾を3つ持たせた骨格。同じ骨格でも語尾で別のお題に見えるか（3層分離が効くか）を試す実験台",
+      "deny": {
+        "PLACE": [
+          "private"
+        ],
+        "PGUISE": [
+          "biz",
+          "loc"
+        ]
+      },
+      "noBrought": true
+    },
+    {
+      "id": "at-05",
+      "type": "attr",
+      "template": "{PERSON}が{PLACE}に持ち込んだ{THING}。{E}",
+      "slots": [
+        "PERSON",
+        "PLACE",
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "どんな{THING}？",
+          "fallback": "どんなの？"
+        },
+        {
+          "text": "何のため？"
+        }
+      ],
+      "maxLen": 36,
+      "why": "属性型で3要素を試す。ha-02 と並べて、要素3つの限界を2型で確かめる",
+      "deny": {
+        "THING": [
+          "fixed",
+          "nonproduct"
+        ],
+        "PLACE": [
+          "private",
+          "nook"
+        ]
+      }
+    },
+    {
+      "id": "at-06",
+      "type": "attr",
+      "template": "{PGUISE}{ORG}に入るには、変わった試験に受からないといけない。{E}",
+      "slots": [
+        "PGUISE",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "どんな試験？"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "official",
+          "noplace"
+        ]
+      },
+      "maxLen": 52,
+      "why": "1要素だが前振りが長い型。組織名だけで答えが出せるかを、状況提示型より軽い形で試す",
+      "require": {
+        "ORG": [
+          "service"
+        ]
+      }
+    },
+    {
+      "id": "at-07",
+      "type": "attr",
+      "template": "{ATTR}すぎる{PERSON}{E}",
+      "slots": [
+        "ATTR",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "あるあるを教えてください。"
+        },
+        {
+          "text": "ないないを教えてください。"
+        }
+      ],
+      "maxLen": 36,
+      "why": "「〇〇すぎる〇〇」は世間で定着している言い回しなので、前振りが1語でも状況が立つ"
+    },
+    {
+      "id": "at-08",
+      "type": "attr",
+      "template": "{GUISE}{PERSON}が{ACT}するときの、絶対に譲れないこだわり。{E}",
+      "slots": [
+        "GUISE",
+        "PERSON",
+        "ACT"
+      ],
+      "endings": [
+        {
+          "text": "どんなこだわり？"
+        }
+      ],
+      "deny": {
+        "ACT": [
+          "needsObj"
+        ]
+      },
+      "maxLen": 50,
+      "why": "人物像と行為を掛け合わせる型。「こだわり」は細かいほど面白いので、回答が具体に向かう"
+    },
+    {
+      "id": "at-09",
+      "type": "attr",
+      "template": "{GUISE}{PERSON}のスマホの検索履歴。{E}",
+      "slots": [
+        "GUISE",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "何と検索した？"
+        }
+      ],
+      "maxLen": 42,
+      "why": "内面を外から見せる形。人物像さえ立てば答えが無限に出る"
+    },
+    {
+      "id": "bl-01",
+      "type": "blank",
+      "template": "{GUISE}{PERSON}の口ぐせは「〇〇」。{E}",
+      "slots": [
+        "GUISE",
+        "PERSON"
+      ],
+      "endings": [
+        "〇〇に入る言葉は？"
+      ],
+      "maxLen": 42,
+      "why": "穴埋めは書く量が最小で済むので、フリップと最も相性が良い型。1要素でも持つかを見る"
+    },
+    {
+      "id": "bl-02",
+      "type": "blank",
+      "template": "{PGUISE}{PLACE}の看板に「〇〇」と書いてある。{E}",
+      "slots": [
+        "PGUISE",
+        "PLACE"
+      ],
+      "endings": [
+        "〇〇に入る言葉は？"
+      ],
+      "maxLen": 42,
+      "why": "場所版の穴埋め。bl-01 と並べて、人と場所のどちらが穴を埋めやすいかを比べる",
+      "deny": {
+        "PLACE": [
+          "private",
+          "nook"
+        ],
+        "PGUISE": [
+          "biz",
+          "loc"
+        ]
+      },
+      "require": {
+        "PLACE": [
+          "sign"
+        ]
+      }
+    },
+    {
+      "id": "bl-03",
+      "type": "blank",
+      "template": "{PGUISE}{ORG}の新しい標語は「〇〇」。{E}",
+      "slots": [
+        "PGUISE",
+        "ORG"
+      ],
+      "endings": [
+        "〇〇に入る言葉は？"
+      ],
+      "maxLen": 42,
+      "why": "組織版。標語という形式そのものが回答に型を与えるので、答えが揃いすぎないかを警戒して見る",
+      "deny": {
+        "ORG": [
+          "noplace"
+        ],
+        "PGUISE": [
+          "biz"
+        ]
+      }
+    },
+    {
+      "id": "bl-04",
+      "type": "blank",
+      "template": "{PGUISE}{ORG}の口コミに「〇〇」と書かれていた。{E}",
+      "slots": [
+        "PGUISE",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "〇〇に入る言葉は？"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "noplace"
+        ]
+      },
+      "maxLen": 46,
+      "why": "穴埋め3本が全部「店側が書いた文」だったので、客側が書く文を1本足す",
+      "require": {
+        "ORG": [
+          "service"
+        ]
+      }
+    },
+    {
+      "id": "bl-05",
+      "type": "blank",
+      "template": "{GUISE}{PERSON}が書いた反省文の一行目は「〇〇」。{E}",
+      "slots": [
+        "GUISE",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "〇〇に入る言葉は？"
+        }
+      ],
+      "maxLen": 46,
+      "why": "反省文という枠が「言い訳」「開き直り」と答えの型を与える。穴埋めで最も方向が立つ形"
+    },
+    {
+      "id": "bl-06",
+      "type": "blank",
+      "template": "{PGUISE}{ORG}の張り紙「本日は〇〇のため休業します」。{E}",
+      "slots": [
+        "PGUISE",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "〇〇に入る言葉は？"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "noplace"
+        ]
+      },
+      "maxLen": 48,
+      "why": "既存の穴埋めは自由文だったが、これは「〜のため」で品詞まで縛る。答えが短くなるのでフリップ向き",
+      "require": {
+        "ORG": [
+          "service"
+        ]
+      }
+    },
+    {
+      "id": "co-01",
+      "type": "common",
+      "template": "{ATTR}な{PERSON}{E}",
+      "slots": [
+        "ATTR",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "あるあるを教えてください。"
+        },
+        {
+          "text": "ないないを教えてください。"
+        }
+      ],
+      "maxLen": 36,
+      "why": "最も制限が緩い型。場が固いときの緩衝材として置く。緩すぎて何を出しても通る＝笑いにならない、なら消す"
+    },
+    {
+      "id": "co-02",
+      "type": "common",
+      "template": "{PGUISE}{ORG}{E}",
+      "slots": [
+        "PGUISE",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "あるあるを教えてください。"
+        },
+        {
+          "text": "ないないを教えてください。"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "noplace"
+        ],
+        "PGUISE": [
+          "biz"
+        ]
+      },
+      "maxLen": 40,
+      "why": "あるあるが1本しかなく毎回「{ATTR}な{PERSON}」だった。組織版"
+    },
+    {
+      "id": "co-03",
+      "type": "common",
+      "template": "{PGUISE}{PLACE}{E}",
+      "slots": [
+        "PGUISE",
+        "PLACE"
+      ],
+      "endings": [
+        {
+          "text": "あるあるを教えてください。"
+        },
+        {
+          "text": "ないないを教えてください。"
+        }
+      ],
+      "deny": {
+        "PGUISE": [
+          "biz",
+          "loc"
+        ]
+      },
+      "maxLen": 40,
+      "why": "同じく場所版"
+    },
+    {
+      "id": "ct-01",
+      "type": "cont",
+      "template": "{PLACE}の扉を開けると{PERSON}が…。{E}",
+      "slots": [
+        "PLACE",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "何をしていた？"
+        }
+      ],
+      "maxLen": 45,
+      "why": "三点リーダで止めて続きを書かせる形。実測0.3%の希少種だが、フリップで絵を描く回答を最も呼びやすいはずなので1本だけ置く",
+      "deny": {
+        "PLACE": [
+          "nook",
+          "outdoor"
+        ]
+      }
+    },
+    {
+      "id": "ct-02",
+      "type": "cont",
+      "template": "{PLACE}で{PERSON}が振り返ると、そこには…。{E}",
+      "slots": [
+        "PLACE",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "何がいた？"
+        }
+      ],
+      "maxLen": 40,
+      "why": "未完・継続型が1本しかなかった。ct-01 が扉、こちらは背後"
+    },
+    {
+      "id": "df-01",
+      "type": "define",
+      "template": "「{THING}」は、実は何かの略らしい。{E}",
+      "slots": [
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "何の略？"
+        }
+      ],
+      "maxLen": 36,
+      "why": "定義変換型。調査では「型というよりタグ運用上のジャンル名」と判定保留にしたが、骨格としては書ける。答えの形が決まるのでフリップ向き"
+    },
+    {
+      "id": "df-02",
+      "type": "define",
+      "template": "辞書に載っていない「{ACT}」の意味。{E}",
+      "slots": [
+        "ACT"
+      ],
+      "endings": [
+        {
+          "text": "どんな意味？"
+        }
+      ],
+      "maxLen": 36,
+      "why": "同じ定義変換でも、物ではなく行為に別の意味を当てる。df-01 と答えの質が変わるかを見る"
+    },
+    {
+      "id": "fl-01",
+      "type": "flip",
+      "template": "普通の{ORG}にはあるのに、この{ORG}にはないもの。{E}",
+      "slots": [
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "何？"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "noplace"
+        ]
+      },
+      "maxLen": 40,
+      "why": "反転型。実測で嫌だ・逆張り型として3.7%あったが、否定評価型とは別物。「普通は〜」で常識側を先に置くのが要点"
+    },
+    {
+      "id": "fl-02",
+      "type": "flip",
+      "template": "{PERSON}なのに{ACT}が苦手。{E}",
+      "slots": [
+        "PERSON",
+        "ACT"
+      ],
+      "endings": [
+        {
+          "text": "なぜ？"
+        },
+        {
+          "text": "どれくらい苦手？"
+        }
+      ],
+      "deny": {
+        "ACT": [
+          "needsObj"
+        ]
+      },
+      "maxLen": 36,
+      "why": "肩書きと能力を裏返す形。1文が短いので、素材2つの落差だけで成立するかを試す"
+    },
+    {
+      "id": "ha-01",
+      "type": "hate",
+      "template": "こんな{ORG}は嫌だ。{E}",
+      "slots": [
+        "ORG"
+      ],
+      "endings": [
+        "どんなの？"
+      ],
+      "maxLen": 42,
+      "why": "否定評価型の定型。「嫌」の方向を絞らないと難度が跳ね上がると言われている型なので、1要素で成立するかを見る"
+    },
+    {
+      "id": "ha-04",
+      "type": "hate",
+      "template": "こんな{PLACE}は嫌だ。{E}",
+      "slots": [
+        "PLACE"
+      ],
+      "endings": [
+        {
+          "text": "どんなの？"
+        }
+      ],
+      "maxLen": 36,
+      "why": "ha-03（こんな{TIME}の{ORG}）が修飾で答えを先取りして落ちた代わり。ha-01 の場所版として、余計な修飾を持たない形にする"
+    },
+    {
+      "id": "ha-05",
+      "type": "hate",
+      "template": "こんな{PERSON}は嫌だ。{E}",
+      "slots": [
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "どんなの？"
+        }
+      ],
+      "maxLen": 36,
+      "why": "ha-01（組織）ha-04（場所）に対する人版。修飾を持たせないのは、修飾が答えを先取りするため"
+    },
+    {
+      "id": "ha-06",
+      "type": "hate",
+      "template": "こんな{ACT}は嫌だ。{E}",
+      "slots": [
+        "ACT"
+      ],
+      "endings": [
+        {
+          "text": "どんなの？"
+        }
+      ],
+      "deny": {
+        "ACT": [
+          "needsObj"
+        ]
+      },
+      "maxLen": 36,
+      "why": "行為版。名詞ではなく動きを嫌がらせる形は他に無い"
+    },
+    {
+      "id": "li-01",
+      "type": "line",
+      "template": "{PGUISE}{PLACE}で{PERSON}に言われた一言。{E}",
+      "slots": [
+        "PGUISE",
+        "PLACE",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "何と言われた？"
+        },
+        {
+          "text": "何？"
+        }
+      ],
+      "maxLen": 44,
+      "why": "セリフ型の基本。フリップとの相性が最も良いはずの型なので、実際に短く書けているかを測る",
+      "deny": {
+        "PGUISE": [
+          "biz",
+          "loc"
+        ],
+        "PLACE": [
+          "ruin"
+        ]
+      }
+    },
+    {
+      "id": "li-02",
+      "type": "line",
+      "template": "{ACT}した{PERSON}の第一声。{E}",
+      "slots": [
+        "ACT",
+        "PERSON"
+      ],
+      "endings": [
+        "何と言った？",
+        "何と言う？"
+      ],
+      "maxLen": 36,
+      "why": "行為の直後に固定するセリフ型。st-03 が直前、こちらが直後。前後で回答の質が変わるかを見る",
+      "deny": {
+        "ACT": [
+          "needsObj"
+        ]
+      }
+    },
+    {
+      "id": "li-03",
+      "type": "line",
+      "template": "{GUISE}{PERSON}が絶対に言わない一言。{E}",
+      "slots": [
+        "GUISE",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "何？"
+        },
+        {
+          "text": "どんな一言？"
+        }
+      ],
+      "maxLen": 42,
+      "why": "1要素かつ反転を含む型。要素が少ないぶん難度が上がるはずなので、身内で滑らないかを慎重に見る"
+    },
+    {
+      "id": "li-05",
+      "type": "line",
+      "template": "{ORG}の電話に出たのは、{GUISE}スタッフだった。{E}",
+      "slots": [
+        "ORG",
+        "GUISE"
+      ],
+      "endings": [
+        {
+          "text": "第一声は？"
+        }
+      ],
+      "maxLen": 46,
+      "why": "li-04（朝礼）が組織と人の両方に強い制約を掛けて汎用性を失ったぶんの代わり。電話ならどの組織でも成立する",
+      "deny": {
+        "ORG": [
+          "noplace",
+          "official"
+        ]
+      }
+    },
+    {
+      "id": "li-06",
+      "type": "line",
+      "template": "{GUISE}{PERSON}が{THING}を見て一言。{E}",
+      "slots": [
+        "GUISE",
+        "PERSON",
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "何と言った？"
+        }
+      ],
+      "maxLen": 42,
+      "why": "人物像を guise で作り、見た物への反応を言わせる。li-01（言われた側）と視点が逆"
+    },
+    {
+      "id": "li-07",
+      "type": "line",
+      "template": "{PLACE}で{PERSON}に道を聞いたら、まったく違う話をされた。{E}",
+      "slots": [
+        "PLACE",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "何の話？"
+        }
+      ],
+      "maxLen": 58,
+      "why": "条件節（〜したら）で状況を作る形。文が長いぶん前振りが厚く、回答は短くて済む",
+      "denyTags": {
+        "PERSON": [
+          "非日常"
+        ]
+      },
+      "require": {
+        "PLACE": [
+          "outdoor"
+        ]
+      },
+      "deny": {
+        "PLACE": [
+          "private"
+        ]
+      }
+    },
+    {
+      "id": "li-08",
+      "type": "line",
+      "template": "{GUISE}{PERSON}の留守番電話に残されていた一言。{E}",
+      "slots": [
+        "GUISE",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "何と言っていた？"
+        }
+      ],
+      "maxLen": 46,
+      "why": "相手が見えないセリフ。誰が何のために残したかごと答えられる"
+    },
+    {
+      "id": "nm-01",
+      "type": "name",
+      "template": "元{PERSON}が作った{THING}。{E}",
+      "slots": [
+        "PERSON",
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "商品名は？"
+        }
+      ],
+      "maxLen": 36,
+      "why": "モノ・名称型はネットで最多だが、このゲームでは重みを落とした型。本当に2人目以降が枯れるかを確かめるための2本のうち1本",
+      "require": {
+        "PERSON": [
+          "trade"
+        ]
+      },
+      "noBrought": true,
+      "deny": {
+        "THING": [
+          "nonproduct"
+        ]
+      }
+    },
+    {
+      "id": "nm-02",
+      "type": "name",
+      "template": "{PLACE}の自動販売機で売れ残っている商品。{E}",
+      "slots": [
+        "PLACE"
+      ],
+      "endings": [
+        {
+          "text": "何？"
+        },
+        {
+          "text": "どんな商品？"
+        }
+      ],
+      "maxLen": 36,
+      "why": "命名の幅が広い形。名称型でも幅が出せるなら、重み8は上げてよいという判断材料になる",
+      "require": {
+        "PLACE": [
+          "pub"
+        ]
+      }
+    },
+    {
+      "id": "nm-03",
+      "type": "name",
+      "template": "{PERSON}が作った高機能{THING}。{E}",
+      "slots": [
+        "PERSON",
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "どんな機能がある？"
+        }
+      ],
+      "denyTags": {
+        "PERSON": [
+          "非日常"
+        ]
+      },
+      "maxLen": 36,
+      "why": "「どんな機能がある？」は物が高機能だという前振りがあって初めて答えられる。語尾に合わせて前振りを置いた骨格",
+      "noBrought": true,
+      "deny": {
+        "THING": [
+          "nonproduct"
+        ]
+      }
+    },
+    {
+      "id": "nm-04",
+      "type": "name",
+      "template": "{PGUISE}{ORG}の裏メニュー。{E}",
+      "slots": [
+        "PGUISE",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "何？"
+        },
+        {
+          "text": "どんなの？"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "noplace"
+        ]
+      },
+      "maxLen": 36,
+      "why": "裏メニューは「表に出せない」という含みが最初から乗っているので、短いのに答えの方向が立つ",
+      "require": {
+        "ORG": [
+          "service"
+        ]
+      }
+    },
+    {
+      "id": "nm-05",
+      "type": "name",
+      "template": "{PGUISE}{ORG}が新発売した、売れる気のしない商品。{E}",
+      "slots": [
+        "PGUISE",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "何？"
+        },
+        {
+          "text": "どんなの？"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "noplace"
+        ]
+      },
+      "maxLen": 46,
+      "why": "「売れる気のしない」が方向を決めるので、商品名でも機能でも答えられる",
+      "require": {
+        "ORG": [
+          "service"
+        ]
+      }
+    },
+    {
+      "id": "st-01",
+      "type": "setting",
+      "template": "{PERSON}がその場を去ったあとに残っていた{THING}。{E}",
+      "slots": [
+        "PERSON",
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "どんなの？"
+        },
+        {
+          "text": "なぜ残っていた？"
+        }
+      ],
+      "maxLen": 45,
+      "why": "人と物を最小構成でぶつける基本形。何を答えるかを一切指定しないので、物の中身でも、なぜ残したかでも、誰宛でも答えられる。設定提示型の素の力を測る物差しにする"
+    },
+    {
+      "id": "st-02",
+      "type": "setting",
+      "template": "{PGUISE}{PLACE}にだけ貼ってある張り紙。{E}",
+      "slots": [
+        "PGUISE",
+        "PLACE"
+      ],
+      "endings": [
+        {
+          "text": "なんて書いてある？"
+        }
+      ],
+      "maxLen": 45,
+      "why": "1要素。場所の想像力だけで持つかどうかを試す。持たないなら、設定提示型は2要素以上が必須という結論になる",
+      "deny": {
+        "PGUISE": [
+          "biz",
+          "loc"
+        ]
+      }
+    },
+    {
+      "id": "st-03",
+      "type": "setting",
+      "template": "{ACT}する直前の{PERSON}。{E}",
+      "slots": [
+        "ACT",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "何を考えている？"
+        }
+      ],
+      "maxLen": 45,
+      "why": "時間を「直前」に固定すると、答えが表情・持ち物・独り言・準備と複数の軸に散る。B（1つのお題の中の幅）が最も出やすい形のはず",
+      "deny": {
+        "ACT": [
+          "needsObj"
+        ]
+      },
+      "require": {
+        "ACT": [
+          "event"
+        ]
+      }
+    },
+    {
+      "id": "st-04",
+      "type": "setting",
+      "template": "{ORG}に置いてある、誰も使わない{THING}。{E}",
+      "slots": [
+        "ORG",
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "どんなの？"
+        },
+        {
+          "text": "なぜ置いてある？"
+        }
+      ],
+      "maxLen": 45,
+      "why": "「誰も使わない」という前振りが状況を少しだけ絞る。前振りの有無で回答の出やすさが変わるかを、st-01 との比較で見る",
+      "deny": {
+        "ORG": [
+          "noplace"
+        ],
+        "THING": [
+          "nonproduct"
+        ]
+      },
+      "noBrought": true
+    },
+    {
+      "id": "st-05",
+      "type": "setting",
+      "template": "{TIME}に{PLACE}で撮られた1枚の写真。{E}",
+      "slots": [
+        "TIME",
+        "PLACE"
+      ],
+      "endings": [
+        {
+          "text": "どんな写真？"
+        },
+        {
+          "text": "何が写っている？"
+        }
+      ],
+      "maxLen": 45,
+      "why": "時と場所だけの2要素。人を出さないと回答がどう散るかを見る",
+      "deny": {
+        "TIME": [
+          "moment",
+          "narrow"
+        ],
+        "PLACE": [
+          "private",
+          "nook"
+        ]
+      }
+    },
+    {
+      "id": "st-06",
+      "type": "setting",
+      "template": "{PERSON}が{ORG}に出した、たった一行の手紙。{E}",
+      "slots": [
+        "PERSON",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "なんて書いてある？"
+        }
+      ],
+      "maxLen": 45,
+      "why": "「たった一行」で回答の長さを縛る。フリップで短く書かせる誘導が効くかの検証",
+      "denyTags": {
+        "PERSON": [
+          "非日常"
+        ]
+      }
+    },
+    {
+      "id": "st-07",
+      "type": "setting",
+      "template": "{PLACE}で{PERSON}を見かけた。手には{THING}を持っている。{E}",
+      "slots": [
+        "PLACE",
+        "PERSON",
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "このあと{PERSON}は…？"
+        }
+      ],
+      "maxLen": 58,
+      "why": "初めての2文構成。前振りを2段に分けると、1文目で状況・2文目で違和感、という読ませ方ができる",
+      "deny": {
+        "PERSON": [
+          "trade"
+        ]
+      }
+    },
+    {
+      "id": "st-08",
+      "type": "setting",
+      "template": "{PGUISE}{ORG}の入口に貼ってある、3つの禁止事項。{E}",
+      "slots": [
+        "PGUISE",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "3つ目は？"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "noplace"
+        ]
+      },
+      "maxLen": 45,
+      "why": "「3つ目は？」は、答えが1つに絞れて短く書けるうえ、1つ目と2つ目を回答者が勝手に想像する。フリップ向き",
+      "require": {
+        "ORG": [
+          "service"
+        ]
+      }
+    },
+    {
+      "id": "st-09",
+      "type": "setting",
+      "template": "{PGUISE}{ORG}が出した、意味のわからない求人広告。{E}",
+      "slots": [
+        "PGUISE",
+        "ORG"
+      ],
+      "endings": [
+        {
+          "text": "どんな仕事？"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "noplace"
+        ],
+        "PGUISE": [
+          "biz"
+        ]
+      },
+      "maxLen": 46,
+      "why": "求人という枠が「仕事内容を答える」と方向を決めてくれるので、前振りが軽くても回答が散らない"
+    },
+    {
+      "id": "st-10",
+      "type": "setting",
+      "template": "{PERSON}の部屋にあった、{PERSON}らしくない{THING}。{E}",
+      "slots": [
+        "PERSON",
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "どんな{THING}？",
+          "fallback": "どんなの？"
+        }
+      ],
+      "deny": {
+        "THING": [
+          "fixed"
+        ]
+      },
+      "maxLen": 44,
+      "why": "「らしくない」と明示することで、人と物が遠いほど良いという珍しい骨格。組み合わせ規則を裏返して使う"
+    },
+    {
+      "id": "wh-02",
+      "type": "why",
+      "template": "{PGUISE}{ORG}が急に{ACT}を始めた。{E}",
+      "slots": [
+        "PGUISE",
+        "ORG",
+        "ACT"
+      ],
+      "endings": [
+        "なぜ？",
+        "何があった？"
+      ],
+      "maxLen": 46,
+      "why": "理由型のもう1本。wh-01 が人、こちらが組織。組織の方が言い訳がましい回答になって面白いという読み",
+      "deny": {
+        "ACT": [
+          "personal"
+        ],
+        "ORG": [
+          "noplace"
+        ],
+        "PGUISE": [
+          "biz"
+        ]
+      }
+    },
+    {
+      "id": "wh-03",
+      "type": "why",
+      "template": "{ORG}が従業員全員に{ACT}を禁止した。{E}",
+      "slots": [
+        "ORG",
+        "ACT"
+      ],
+      "endings": [
+        {
+          "text": "なぜ？"
+        },
+        {
+          "text": "何があった？"
+        }
+      ],
+      "maxLen": 50,
+      "why": "「{ORG}が{ACT}を禁止した」の面白さは禁止という判断そのものにあるので、結果ではなく理由を問う。結果を問うと「禁止される前は流行っていた」という前提が勝手に立つ",
+      "deny": {
+        "ORG": [
+          "noplace"
+        ]
+      },
+      "require": {
+        "ACT": [
+          "personal"
+        ]
+      }
+    },
+    {
+      "id": "wh-04",
+      "type": "why",
+      "template": "{PGUISE}{ORG}が{PERSON}を出入り禁止にした。{E}",
+      "slots": [
+        "PGUISE",
+        "ORG",
+        "PERSON"
+      ],
+      "endings": [
+        {
+          "text": "なぜ？"
+        },
+        {
+          "text": "何をやった？"
+        }
+      ],
+      "deny": {
+        "ORG": [
+          "noplace"
+        ],
+        "PGUISE": [
+          "biz"
+        ]
+      },
+      "maxLen": 46,
+      "why": "理由型が2本しかなかったので補充。出入り禁止は理由を想像させる強さがある"
+    },
+    {
+      "id": "wh-05",
+      "type": "why",
+      "template": "{PLACE}から{THING}が全部無くなった。{E}",
+      "slots": [
+        "PLACE",
+        "THING"
+      ],
+      "endings": [
+        {
+          "text": "なぜ？"
+        }
+      ],
+      "deny": {
+        "THING": [
+          "fixed"
+        ]
+      },
+      "maxLen": 40,
+      "why": "物が消えるという異常だけを置く形。犯人・目的・事故と答えの軸が複数ある",
+      "require": {
+        "THING": [
+          "notable"
+        ]
+      }
+    }
+  ]
+}

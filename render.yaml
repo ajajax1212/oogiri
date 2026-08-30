@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: oogiri
+    env: node
+    plan: free
+    # Render は NODE_ENV=production を既定で入れるので、--include=dev を明示しないと
+    # vite と tsc が入らないままビルドに入って落ちる
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start

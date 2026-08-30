@@ -1,0 +1,7 @@
+node_modules/
+dist/
+dist-server/
+*.tsbuildinfo
+
+# 生の音源置き場。配るのは public/sfx/ の方だけ（senryu-game と同じ）
+sound/

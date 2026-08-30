@@ -1,0 +1,563 @@
+/* 大喜利の画面。テレビの大喜利番組「風」の配色に寄せている。
+   番組のロゴ・マーク・商標そのものは持ち込まない（SPEC.md §10.1）。
+   借りるのは「黄・黒・金の3色」「上下の黒帯」「間の取り方」だけ。
+
+   色数を3色に絞ったのは、フリップの白を目立たせるため。
+   画面の中で白いものが1つしかなければ、視線は必ずそこへ行く。 */
+
+:root {
+  /* 黄 — 画面いっぱいに敷いても濁らない、彩度の高い黄。緑にも橙にも寄せない */
+  --yellow: #ffe100;
+  --yellow-dk: #f0c400;
+  --yellow-lt: #fff45c;
+
+  /* 黒 — 純黒(#000)は帯にだけ使い、面には少し灰を混ぜた黒を敷く。
+     純黒の面に純黒の帯を置くと帯が消えるため、2段持つ */
+  --black: #000;
+  --stage: #0d0d0c;
+  --panel: #17160f;
+  --panel-2: #211f14;
+
+  /* 金 — 罫線・見出し・控えめな強調。黄より暗いので、黄の隣に置いても喧嘩しない */
+  --gold: #c9a227;
+  --gold-hi: #f6e27a;
+  --gold-dk: #6b5310;
+
+  --ink: #0a0a0a;   /* 黄の上に乗る文字 */
+  --text: #f5eddc;  /* 黒の上に乗る文字。純白にしないのは金と並べたときに浮くから */
+  --dim: #a2916a;
+  --line: #3b3320;
+  --paper: #fff;    /* フリップの板。ここだけは白のまま動かさない */
+
+  /* フリップの高さの上限。vh だけで決めると、背の低いウィンドウで
+     採点ボタンが下の帯に潜る。帯・お題・道具箱の分をピクセルで引いておく */
+  --boardh: min(44vh, calc(100vh - 330px));
+
+  /* 端末にある書体だけで組む。Webフォントは読み込まない（依存を増やさない）。
+     極太が無い環境でも太く見えるよう、見出しには -webkit-text-stroke を併用する */
+  --sans: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Yu Gothic UI', Meiryo, 'MS PGothic', sans-serif;
+  --fat: 'Hiragino Kaku Gothic StdN', 'Hiragino Sans', 'Yu Gothic', 'Yu Gothic UI', Meiryo, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--stage); }
+
+body {
+  margin: 0;
+  /* 判定のスタンプ演出が scale(1.5) から始まるので、そのままだと横スクロールが出る */
+  overflow-x: hidden;
+  min-height: 100vh;
+  font-family: var(--sans);
+  color: var(--text);
+  background:
+    /* 舞台の吊り込み。中央の上に薄く金の光を置くと、黒一色より奥行きが出る */
+    radial-gradient(900px 520px at 50% -6%, rgba(201, 162, 39, .26) 0%, transparent 70%),
+    linear-gradient(180deg, #151309 0%, var(--stage) 46%, #000 100%);
+  background-attachment: fixed;
+}
+
+/* --- 部品 --- */
+
+button {
+  font: inherit;
+  cursor: pointer;
+  /* 押し損ねたときにラベルが青く選択されるのを止める。
+     連打される場面（採点・次のお題）で見た目が汚れる */
+  user-select: none;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 10px 18px;
+  font-weight: 700;
+  transition: background .12s, border-color .12s, color .12s, opacity .12s;
+}
+button:hover:not(:disabled) { background: #2e2a18; border-color: var(--gold); color: var(--gold-hi); }
+button:disabled { opacity: .3; cursor: default; }
+button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+
+/* 押してほしいボタンは黄。画面の中で黄は「進む」の意味しか持たせない */
+button.gold {
+  background: linear-gradient(180deg, var(--yellow-lt), var(--yellow) 38%, var(--yellow-dk));
+  border-color: #a88600;
+  color: var(--ink);
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+button.gold:hover:not(:disabled) {
+  background: linear-gradient(180deg, #fffaa8, var(--yellow-lt) 40%, var(--yellow));
+  color: var(--ink);
+  border-color: #a88600;
+}
+
+input, select {
+  font: inherit;
+  color: var(--text);
+  background: #0b0a06;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+input:focus { outline: none; border-color: var(--gold); }
+input::placeholder { color: #6d6143; }
+
+.app { max-width: 1120px; margin: 0 auto; padding: 20px 20px 120px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.col { display: flex; flex-direction: column; gap: 12px; }
+.muted { color: var(--dim); }
+.err { color: #ff9a6a; min-height: 1.2em; font-weight: 700; }
+.hr { height: 1px; background: var(--line); margin: 20px 0; }
+
+.card {
+  background: linear-gradient(180deg, var(--panel), #100f0a);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--gold);
+  border-radius: 3px;
+  padding: 22px;
+}
+
+/* 節の見出し。金の短い罫を頭に付けて、本文と高さで区別する */
+.sec {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: 17px;
+  letter-spacing: .12em;
+  color: var(--gold-hi);
+}
+.sec::before { content: ''; width: 18px; height: 3px; background: var(--gold); }
+
+/* --- 表題 --- */
+
+.title { text-align: center; padding: 40px 0 26px; }
+
+/* 表題も「黄の板に黒の文字」。intro と同じ作りにして、最初の画面で世界観を決める */
+.plaque {
+  display: inline-block;
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: clamp(38px, 8vw, 72px);
+  line-height: 1;
+  letter-spacing: .16em;
+  text-indent: .16em;
+  padding: 18px 30px 22px;
+  -webkit-text-stroke: .035em var(--ink);
+  box-shadow: 0 0 0 4px var(--black), 0 0 0 6px var(--gold), 0 18px 44px rgba(0, 0, 0, .7);
+}
+.title p { color: var(--dim); margin: 22px 0 0; letter-spacing: .14em; font-size: 14px; }
+
+.code {
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: 30px;
+  letter-spacing: .3em;
+  text-indent: .3em;
+  color: var(--yellow);
+  background: #000;
+  border: 1px solid var(--gold-dk);
+  padding: 6px 14px;
+  line-height: 1.2;
+}
+
+/* --- お題（ボード画面の上に小さく出るほう） --- */
+
+.strip {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: var(--yellow);
+  color: var(--ink);
+  border-bottom: 5px solid var(--black);
+  padding: 14px 18px 16px;
+  margin: -20px -20px 18px;  /* .app の内側余白を打ち消して、画面幅いっぱいの帯にする */
+  text-align: center;
+  animation: stripin .42s cubic-bezier(.2, .9, .25, 1) both;
+}
+.strip b {
+  display: block;
+  font-family: var(--fat);
+  font-weight: 900;
+  /* intro と同じ考え方で「使える横幅 ÷ 最長行の字数」。
+     どんな画面幅でも1行がはみ出さず、CSS 側で勝手に折り返されない */
+  font-size: min(calc(88vw / var(--n, 20)), 32px);
+  line-height: 1.26;
+  letter-spacing: .01em;
+  -webkit-text-stroke: .028em var(--ink);
+}
+.strip b span { display: block; }
+.strip .tag {
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .4em;
+  text-indent: .4em;
+  color: #7a6a00;
+  margin-bottom: 4px;
+}
+@keyframes stripin { from { transform: translateY(-100%); } to { transform: none; } }
+
+/* --- intro（新しいお題の全画面）--- */
+
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--yellow);
+  overflow: hidden;
+}
+/* 上下の黒帯。画面を切り取って「ここを見ろ」と決める役 */
+.intro .bar {
+  background: var(--black);
+  height: clamp(46px, 11vh, 116px);
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 22px;
+  animation: barin .34s cubic-bezier(.2, .9, .25, 1) both;
+}
+.intro .bar.top { justify-content: flex-end; --y: -100%; }
+.intro .bar.bottom { justify-content: space-between; --y: 100%; }
+@keyframes barin { from { transform: translateY(var(--y)); } to { transform: none; } }
+
+.intro .lines {
+  display: grid;
+  /* 既定の auto 列は max-content で、文字が入りきらないと列ごと画面からはみ出す。
+     はみ出しても body の overflow-x: hidden で右側が黙って切れるだけなので、
+     列幅を親に固定して「はみ出しようがない」状態にしておく */
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+  padding: 12px;
+  /* 文字の大きさは「使える横幅 ÷ 最長行の字数」。--n は React が行から出して渡す。
+     clamp を字数と無関係に決め打ちすると、短いお題が小さく、長いお題がはみ出す。
+     86vw なのは、字送りと縁取りの分だけ実際の行幅が字数×文字サイズより広がるため */
+  font-size: min(calc(86vw / var(--n, 12)), calc(62vh / var(--l, 2)), 152px);
+}
+.intro .lines span {
+  font-family: var(--fat);
+  font-weight: 900;
+  color: var(--ink);
+  line-height: 1.2;
+  letter-spacing: .005em;
+  /* 端末に極太ゴシックが無くても太く見せる。Webフォントを足さないための代用 */
+  -webkit-text-stroke: .035em var(--ink);
+  animation: linein .44s cubic-bezier(.2, .9, .25, 1) both;
+  animation-delay: calc(var(--i) * .1s + .14s);
+}
+@keyframes linein {
+  from { opacity: 0; transform: translateY(.16em) scale(.95); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 帯の中の名乗り。番組のロゴは使わないので、このゲーム自身の名前を置く */
+.intro .brand {
+  font-family: var(--fat);
+  font-weight: 900;
+  color: var(--yellow);
+  letter-spacing: .34em;
+  font-size: clamp(13px, 1.7vw, 20px);
+}
+.intro .brand em { font-style: normal; color: var(--gold); letter-spacing: .22em; font-size: .68em; margin-left: .8em; }
+.intro .no {
+  font-family: var(--fat);
+  font-weight: 900;
+  color: var(--gold);
+  letter-spacing: .3em;
+  font-size: clamp(11px, 1.4vw, 15px);
+}
+
+/* 残り時間の線。進行そのものはサーバーの deadline が決める。
+   ここは受け取った締切までの長さをアニメの尺にして「描くだけ」 */
+.intro .tick {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--gold);
+  width: 0;
+  animation: tick var(--dur, 3200ms) linear both;
+}
+@keyframes tick { to { width: 100%; } }
+
+/* 幕が上へめくれてボードが出る。サーバーが open に進めた後の見送りだけを持つ */
+.intro.out {
+  pointer-events: none;
+  animation: wipe .42s cubic-bezier(.6, 0, .8, .3) both;
+}
+@keyframes wipe { to { transform: translateY(-102%); } }
+
+/* --- declared / tally（間を取るだけの画面）--- */
+
+.declare {
+  min-height: 62vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0 20px;
+  animation: linein .45s cubic-bezier(.2, .9, .25, 1) both;
+}
+.declare b {
+  display: block;
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: clamp(30px, 6.4vw, 74px);
+  line-height: 1.25;
+  color: var(--yellow);
+  -webkit-text-stroke: .02em var(--yellow);
+}
+.declare small {
+  display: block;
+  margin-top: 22px;
+  color: var(--gold);
+  letter-spacing: .42em;
+  text-indent: .42em;
+  font-size: 13px;
+  font-weight: 700;
+}
+/* 名前の左右に金の線を引いて、暗転の中で高さを作る */
+.declare .rule { width: min(420px, 70vw); height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin: 26px auto 0; }
+
+.tally { min-height: 40vh; display: grid; place-items: center; }
+.tally b {
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: clamp(26px, 4vw, 40px);
+  letter-spacing: .5em;
+  text-indent: .5em;
+  color: var(--gold-hi);
+}
+.tally .dots { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+.tally .dots i { width: 10px; height: 10px; background: var(--gold); border-radius: 50%; animation: blink 1s ease-in-out infinite; }
+.tally .dots i:nth-child(2) { animation-delay: .16s; }
+.tally .dots i:nth-child(3) { animation-delay: .32s; }
+@keyframes blink { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+
+/* --- フリップ --- */
+
+.board {
+  background: var(--paper);
+  border-radius: 2px;
+  /* 黒の縁 + 金の細枠。黄の世界の中で白い板が浮くように、間に黒を1枚挟む */
+  border: 6px solid var(--black);
+  box-shadow: 0 0 0 2px var(--gold), 0 24px 46px rgba(0, 0, 0, .8);
+  display: block;
+  width: 100%;
+  height: auto;
+  /* 16:10 なので、高さの上限から横幅の上限を出す。
+     これをやらないと縦長の画面で「回答する」や採点ボタンが下の帯に隠れる */
+  max-width: min(100%, calc(var(--boardh) * 1.6));
+  margin: 0 auto;
+  touch-action: none;
+}
+.board.lift { animation: lift .55s cubic-bezier(.2, .9, .25, 1) both; }
+@keyframes lift { from { opacity: 0; transform: translateY(70px) scale(.96); } to { opacity: 1; transform: none; } }
+
+.tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, .5);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.tools button { padding: 8px 14px; }
+.tools .w { width: 46px; padding: 8px 0; text-align: center; }
+/* 太さと大きさの群を分ける。間を空けるだけで、どこまでが一組か分かる */
+.tools .sep { width: 14px; }
+/* 取り消し系。文字を入れず、幅も揃えて「実行系ではない」と見た目で分ける */
+.tools .icon {
+  min-width: 46px;
+  padding: 8px 10px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.1;
+}
+.tools .draft { flex: 1 1 200px; min-width: 160px; max-width: 340px; }
+.w[data-on='1'] { border-color: var(--yellow); color: var(--yellow); background: #2b2712; }
+.hint { color: var(--dim); font-size: 12px; margin: 8px 0 0; letter-spacing: .04em; }
+
+/* --- 回答する / 公開する --- */
+
+.act { display: flex; justify-content: center; margin-top: 18px; }
+.act button { padding: 16px 52px; font-size: 19px; letter-spacing: .1em; }
+.wait {
+  min-height: 34vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--dim);
+  letter-spacing: .16em;
+}
+
+/* --- 採点 --- */
+
+.scores { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+.scores button {
+  min-width: 148px;
+  padding: 15px 10px;
+  font-size: 17px;
+  font-family: var(--fat);
+  letter-spacing: .08em;
+}
+/* 段が上がるほど枠を強くする。押す前から「重さ」の差が見えているほうが迷わない */
+.scores button:nth-child(2) { border-color: var(--gold-dk); color: var(--gold-hi); }
+.scores button.gold { min-width: 176px; font-size: 20px; }
+
+.done { text-align: center; margin-top: 18px; color: var(--dim); letter-spacing: .1em; }
+.done b { color: var(--yellow); font-family: var(--fat); }
+
+/* --- 判定 --- */
+
+/* 判定は「板 + 判定」で1画面。板の取り分を減らして両方を同時に見せる */
+.resulted .board { --boardh: min(34vh, calc(100vh - 340px)); }
+
+/* stamp は外枠ではなく中の板に掛ける。外枠に transform を掛けると
+   そこが重ね合わせの文脈になり、後光（::before / z-index:-1）が
+   フリップの白の上に出てしまう */
+.verdict { text-align: center; margin-top: 24px; }
+.verdict b {
+  animation: stamp .42s cubic-bezier(.2, 1.4, .4, 1) both;
+  display: inline-block;
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: clamp(32px, 5.6vw, 62px);
+  letter-spacing: .1em;
+  text-indent: .1em;
+  color: var(--gold-hi);
+  border-top: 2px solid var(--gold);
+  border-bottom: 2px solid var(--gold);
+  padding: 10px 26px;
+}
+@keyframes stamp { from { opacity: 0; transform: scale(1.5); } to { opacity: 1; transform: scale(1); } }
+
+/* 満点大笑いだけは格を変える。黄の面をもう一度出して、intro と同じ強さで殴る */
+.verdict.perfect { position: relative; margin-top: 30px; }
+.verdict.perfect b {
+  background: var(--yellow);
+  color: var(--ink);
+  border: 0;
+  -webkit-text-stroke: .035em var(--ink);
+  padding: 22px 40px 26px;
+  font-size: clamp(38px, 7.4vw, 86px);
+  box-shadow: 0 0 0 5px var(--black), 0 0 0 8px var(--gold), 0 0 120px rgba(255, 225, 0, .5);
+}
+/* 後光。画像を持たずに済むよう conic-gradient で作る */
+.verdict.perfect::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150vw;
+  height: 150vw;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 225, 0, .28) 0deg 7deg, transparent 7deg 14deg);
+  -webkit-mask-image: radial-gradient(closest-side, #000 10%, transparent 66%);
+  mask-image: radial-gradient(closest-side, #000 10%, transparent 66%);
+  animation: rays 24s linear infinite;
+}
+@keyframes rays { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.verdict .counts {
+  margin-top: 14px;
+  color: var(--dim);
+  letter-spacing: .16em;
+  font-size: 14px;
+  /* 判定より一拍おいて出す。先に「何笑いか」を読ませたい */
+  animation: linein .4s ease .22s both;
+}
+.verdict.perfect .counts { color: var(--gold-hi); }
+
+@media (prefers-reduced-motion: reduce) {
+  .verdict.perfect::before { animation: none; }
+  .intro .lines span, .intro .bar, .board.lift, .strip, .declare { animation-duration: .01ms; }
+}
+
+/* --- 参加者の帯 --- */
+
+.dock {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 20;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .55), #000 40%);
+  border-top: 3px solid var(--gold);
+  padding: 10px 20px 12px;
+}
+.dock .inner { max-width: 1120px; margin: 0 auto; display: flex; gap: 12px; align-items: center; }
+.seats { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; min-width: 0; }
+.seat {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: #100f0a;
+}
+.seat[data-off='1'] { opacity: .35; }
+/* 「次へ」を押した席は黄で塗る。誰を待っているのかが一目で分かる */
+.seat[data-ready='1'] { border-color: var(--yellow); color: var(--yellow); }
+.seat .p { color: var(--ink); background: var(--yellow); border-radius: 999px; padding: 1px 8px; font-size: 12px; font-weight: 900; }
+.seat .w { color: var(--gold); font-size: 12px; font-weight: 400; }
+.seat .host { color: var(--dim); font-size: 11px; font-weight: 400; letter-spacing: .1em; }
+
+/* 音の入り切り。オンのときだけ金で灯す。
+   下の帯の中では「進む」ボタンより後ろに居てほしいので、黄は使わない */
+.sfx {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  color: var(--dim);
+}
+.sfx[data-on='1'] { color: var(--gold-hi); border-color: var(--gold); }
+.sfx span { font-size: 13px; letter-spacing: .1em; }
+
+.chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 14px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  background: #100f0a;
+}
+.chip button { padding: 0 6px; font-size: 12px; border: 0; background: none; color: var(--dim); }
+.chip button:hover { background: none; color: var(--yellow); }
+
+details > summary { cursor: pointer; color: var(--dim); letter-spacing: .1em; font-size: 14px; }
+details > summary:hover { color: var(--gold-hi); }
+
+/* --- 狭い画面 --- */
+
+@media (max-width: 720px) {
+  .app { padding: 16px 14px 128px; }
+  .strip { margin: -16px -14px 14px; padding: 10px 12px 12px; }
+  .board { --boardh: min(38vh, calc(100vh - 280px)); }
+  .dock { padding: 8px 12px 10px; }
+  .dock .inner { flex-wrap: wrap; gap: 8px; }
+  /* flex: 1 は基準幅 0 なので width では折り返せない。基準幅ごと 100% にする */
+  .seats { order: 2; flex: 1 0 100%; }
+  .dock .inner > button { flex: 1; }
+  /* 狭い画面では「音」の字を落としてアイコンだけに。帯が3段に折れるのを防ぐ */
+  .sfx { flex: 0 0 auto; padding: 8px 10px; }
+  .sfx span { display: none; }
+  .scores button, .scores button.gold { min-width: 0; flex: 1; padding: 14px 6px; font-size: 16px; }
+  .tools { gap: 6px; padding: 8px; }
+  .tools input { flex: 1; min-width: 120px; }
+  .act button { width: 100%; padding: 15px 10px; }
+}

@@ -1,0 +1,753 @@
+{
+  "cat": "place",
+  "words": [
+    {
+      "id": "pl-01",
+      "word": "温泉",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "commons",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-02",
+      "word": "銭湯",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "commons",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-03",
+      "word": "屋上",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-04",
+      "word": "非常階段",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "commons"
+      ]
+    },
+    {
+      "id": "pl-05",
+      "word": "給湯室",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "private",
+        "commons"
+      ]
+    },
+    {
+      "id": "pl-06",
+      "word": "会議室",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "commons"
+      ]
+    },
+    {
+      "id": "pl-07",
+      "word": "図書館",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "commons",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-08",
+      "word": "教室",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "commons"
+      ]
+    },
+    {
+      "id": "pl-09",
+      "word": "体育館",
+      "tags": [
+        "学校",
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "commons"
+      ]
+    },
+    {
+      "id": "pl-10",
+      "word": "校庭",
+      "tags": [
+        "学校",
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-11",
+      "word": "保健室",
+      "tags": [
+        "学校",
+        "病院"
+      ],
+      "level": 1
+    },
+    {
+      "id": "pl-12",
+      "word": "更衣室",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "commons"
+      ]
+    },
+    {
+      "id": "pl-13",
+      "word": "サービスエリア",
+      "tags": [
+        "乗り物",
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "commons",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-14",
+      "word": "駐車場",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "commons",
+        "sign",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-15",
+      "word": "地下鉄のホーム",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "commons",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-16",
+      "word": "空港",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "commons",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-17",
+      "word": "実家",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "private"
+      ]
+    },
+    {
+      "id": "pl-18",
+      "word": "押し入れ",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "nook",
+        "private"
+      ]
+    },
+    {
+      "id": "pl-19",
+      "word": "台所",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "nook",
+        "private"
+      ]
+    },
+    {
+      "id": "pl-20",
+      "word": "物置",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "nook",
+        "private"
+      ]
+    },
+    {
+      "id": "pl-21",
+      "word": "待合室",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "commons"
+      ]
+    },
+    {
+      "id": "pl-22",
+      "word": "展望台",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "pub",
+        "sign",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-23",
+      "word": "山小屋",
+      "tags": [
+        "旅",
+        "自然"
+      ],
+      "level": 1,
+      "roles": [
+        "nook",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-24",
+      "word": "洞窟",
+      "tags": [
+        "自然",
+        "非日常"
+      ],
+      "level": 1,
+      "roles": [
+        "nook",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-25",
+      "word": "神社",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-26",
+      "word": "廃校",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "nook",
+        "pub",
+        "sign",
+        "ruin"
+      ]
+    },
+    {
+      "id": "pl-27",
+      "word": "屋台",
+      "tags": [
+        "店",
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-28",
+      "word": "社長室",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "private"
+      ]
+    },
+    {
+      "id": "pl-29",
+      "word": "喫煙所",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub"
+      ]
+    },
+    {
+      "id": "pl-30",
+      "word": "倉庫",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "nook"
+      ]
+    },
+    {
+      "id": "pl-31",
+      "word": "受付",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub"
+      ]
+    },
+    {
+      "id": "pl-32",
+      "word": "職員室",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "commons"
+      ]
+    },
+    {
+      "id": "pl-33",
+      "word": "音楽室",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "commons"
+      ]
+    },
+    {
+      "id": "pl-34",
+      "word": "体育倉庫",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "nook"
+      ]
+    },
+    {
+      "id": "pl-35",
+      "word": "昇降口",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub"
+      ]
+    },
+    {
+      "id": "pl-36",
+      "word": "寝室",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "private"
+      ]
+    },
+    {
+      "id": "pl-37",
+      "word": "玄関",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "private"
+      ]
+    },
+    {
+      "id": "pl-38",
+      "word": "ベランダ",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "private",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-39",
+      "word": "風呂場",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "private"
+      ]
+    },
+    {
+      "id": "pl-40",
+      "word": "公園",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub",
+        "sign",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-41",
+      "word": "空き地",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "sign",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-42",
+      "word": "路地裏",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-43",
+      "word": "レジ前",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub"
+      ]
+    },
+    {
+      "id": "pl-44",
+      "word": "試着室",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "commons"
+      ]
+    },
+    {
+      "id": "pl-45",
+      "word": "厨房",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "private"
+      ]
+    },
+    {
+      "id": "pl-46",
+      "word": "店の裏口",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-47",
+      "word": "診察室",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "commons"
+      ]
+    },
+    {
+      "id": "pl-48",
+      "word": "病室",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub"
+      ]
+    },
+    {
+      "id": "pl-49",
+      "word": "薬局",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-50",
+      "word": "土産物屋",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-51",
+      "word": "海の家",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub",
+        "sign",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-52",
+      "word": "河川敷",
+      "tags": [
+        "自然"
+      ],
+      "level": 1,
+      "roles": [
+        "sign",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-53",
+      "word": "森",
+      "tags": [
+        "自然"
+      ],
+      "level": 1,
+      "roles": [
+        "sign",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-54",
+      "word": "砂浜",
+      "tags": [
+        "自然"
+      ],
+      "level": 1,
+      "roles": [
+        "sign",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-55",
+      "word": "本堂",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-56",
+      "word": "墓地",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "sign",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-57",
+      "word": "城",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1,
+      "roles": [
+        "sign"
+      ]
+    },
+    {
+      "id": "pl-58",
+      "word": "地下室",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1,
+      "roles": [
+        "nook"
+      ]
+    },
+    {
+      "id": "pl-59",
+      "word": "フェリー",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub"
+      ]
+    },
+    {
+      "id": "pl-60",
+      "word": "駅のトイレ",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub"
+      ]
+    },
+    {
+      "id": "pl-61",
+      "word": "グラウンド",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub",
+        "outdoor"
+      ]
+    },
+    {
+      "id": "pl-62",
+      "word": "ジム",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "commons",
+        "pub",
+        "sign"
+      ]
+    }
+  ]
+}

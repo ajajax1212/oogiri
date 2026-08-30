@@ -1,0 +1,565 @@
+{
+  "cat": "act",
+  "note": "「{ACT}する」「{ACT}した」の形で骨格に埋まるので、必ずサ変名詞で書く。動詞の連用形や「〜すること」を混ぜると文が壊れる。",
+  "words": [
+    {
+      "id": "ac-01",
+      "word": "遅刻",
+      "tags": [
+        "職場",
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    },
+    {
+      "id": "ac-02",
+      "word": "早退",
+      "tags": [
+        "職場",
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "intrans",
+        "personal"
+      ]
+    },
+    {
+      "id": "ac-03",
+      "word": "挙手",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "intrans",
+        "personal"
+      ]
+    },
+    {
+      "id": "ac-04",
+      "word": "徹夜",
+      "tags": [
+        "職場",
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "intrans",
+        "personal"
+      ]
+    },
+    {
+      "id": "ac-05",
+      "word": "二度寝",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "intrans",
+        "personal"
+      ]
+    },
+    {
+      "id": "ac-06",
+      "word": "昼寝",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "intrans",
+        "personal"
+      ]
+    },
+    {
+      "id": "ac-07",
+      "word": "留守番",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    },
+    {
+      "id": "ac-08",
+      "word": "家出",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ac-09",
+      "word": "告白",
+      "tags": [
+        "学校",
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "needsObj",
+        "event"
+      ]
+    },
+    {
+      "id": "ac-10",
+      "word": "再婚",
+      "tags": [
+        "家",
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ac-11",
+      "word": "転職",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ac-12",
+      "word": "独立",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ac-13",
+      "word": "引退",
+      "tags": [
+        "職場",
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ac-14",
+      "word": "自首",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ac-15",
+      "word": "密告",
+      "tags": [
+        "非日常",
+        "職場"
+      ],
+      "level": 2,
+      "roles": [
+        "personal",
+        "needsObj"
+      ]
+    },
+    {
+      "id": "ac-16",
+      "word": "潜入",
+      "tags": [
+        "非日常"
+      ],
+      "level": 2,
+      "roles": [
+        "personal",
+        "needsObj"
+      ]
+    },
+    {
+      "id": "ac-17",
+      "word": "号泣",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "intrans",
+        "personal"
+      ]
+    },
+    {
+      "id": "ac-18",
+      "word": "正座",
+      "tags": [
+        "儀式",
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "intrans",
+        "personal"
+      ]
+    },
+    {
+      "id": "ac-19",
+      "word": "逆立ち",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "intrans",
+        "personal"
+      ]
+    },
+    {
+      "id": "ac-20",
+      "word": "断食",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "intrans",
+        "personal"
+      ]
+    },
+    {
+      "id": "ac-21",
+      "word": "出前",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "needsObj"
+      ]
+    },
+    {
+      "id": "ac-22",
+      "word": "立ち読み",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "needsObj"
+      ]
+    },
+    {
+      "id": "ac-24",
+      "word": "便乗",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 2,
+      "roles": [
+        "personal",
+        "needsObj"
+      ]
+    },
+    {
+      "id": "ac-25",
+      "word": "反省",
+      "tags": [
+        "学校"
+      ],
+      "level": 1
+    },
+    {
+      "id": "ac-27",
+      "word": "ライブ配信",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "ac-28",
+      "word": "動画投稿",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "ax-27",
+      "word": "残業",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    },
+    {
+      "id": "ax-28",
+      "word": "出張",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ax-29",
+      "word": "昇進",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ax-30",
+      "word": "会議",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "ax-31",
+      "word": "居残り",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    },
+    {
+      "id": "ax-32",
+      "word": "補習",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    },
+    {
+      "id": "ax-33",
+      "word": "進級",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ax-34",
+      "word": "掃除",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "ax-35",
+      "word": "模様替え",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    },
+    {
+      "id": "ax-36",
+      "word": "立ち話",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    },
+    {
+      "id": "ax-37",
+      "word": "値切り",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "needsObj"
+      ]
+    },
+    {
+      "id": "ax-38",
+      "word": "予約",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "needsObj"
+      ]
+    },
+    {
+      "id": "ax-39",
+      "word": "入院",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ax-40",
+      "word": "手術",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "needsObj",
+        "event"
+      ]
+    },
+    {
+      "id": "ax-41",
+      "word": "予防接種",
+      "tags": [
+        "病院"
+      ],
+      "level": 1
+    },
+    {
+      "id": "ax-42",
+      "word": "山登り",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    },
+    {
+      "id": "ax-43",
+      "word": "参拝",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ax-44",
+      "word": "墓参り",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ax-45",
+      "word": "素振り",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    },
+    {
+      "id": "ax-46",
+      "word": "ランニング",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    },
+    {
+      "id": "ax-47",
+      "word": "筋トレ",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    },
+    {
+      "id": "ax-48",
+      "word": "変身",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1,
+      "roles": [
+        "personal",
+        "event"
+      ]
+    },
+    {
+      "id": "ax-49",
+      "word": "ワープ",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1,
+      "roles": [
+        "personal"
+      ]
+    }
+  ]
+}

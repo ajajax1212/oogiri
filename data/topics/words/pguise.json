@@ -1,0 +1,192 @@
+{
+  "cat": "pguise",
+  "note": "場所・組織に掛かる枕詞。「{PGUISE}{PLACE}」の形で埋まる。人物用の guise と分けてあるのは、掛かる先が違うと使える語がまったく重ならないため。常に付けると今度は枕詞そのものが単調になるので、骨格側で optional にして半分の回だけ付ける。",
+  "words": [
+    {
+      "id": "pg-01",
+      "word": "古びた",
+      "level": 1
+    },
+    {
+      "id": "pg-02",
+      "word": "行列のできる",
+      "level": 1,
+      "roles": [
+        "biz"
+      ]
+    },
+    {
+      "id": "pg-03",
+      "word": "オープン初日の",
+      "level": 1,
+      "roles": [
+        "biz"
+      ]
+    },
+    {
+      "id": "pg-04",
+      "word": "廃墟と化した",
+      "level": 1
+    },
+    {
+      "id": "pg-05",
+      "word": "新しく出来た",
+      "level": 1
+    },
+    {
+      "id": "pg-06",
+      "word": "会員制の",
+      "level": 1,
+      "roles": [
+        "biz"
+      ]
+    },
+    {
+      "id": "pg-07",
+      "word": "予約が取れない",
+      "level": 1,
+      "roles": [
+        "biz"
+      ]
+    },
+    {
+      "id": "pg-08",
+      "word": "潰れかけの",
+      "level": 1,
+      "roles": [
+        "biz"
+      ]
+    },
+    {
+      "id": "pg-09",
+      "word": "24時間営業の",
+      "level": 1,
+      "roles": [
+        "biz"
+      ]
+    },
+    {
+      "id": "pg-10",
+      "word": "全席個室の",
+      "level": 1,
+      "roles": [
+        "biz"
+      ]
+    },
+    {
+      "id": "pg-11",
+      "word": "やたら広い",
+      "level": 1
+    },
+    {
+      "id": "pg-12",
+      "word": "異様に静かな",
+      "level": 1
+    },
+    {
+      "id": "pg-13",
+      "word": "女人禁制の",
+      "level": 1
+    },
+    {
+      "id": "pg-14",
+      "word": "常連しかいない",
+      "level": 1
+    },
+    {
+      "id": "pg-15",
+      "word": "深夜だけ賑わう",
+      "level": 1,
+      "roles": [
+        "biz"
+      ]
+    },
+    {
+      "id": "pg-16",
+      "word": "世界初の",
+      "level": 1
+    },
+    {
+      "id": "pg-17",
+      "word": "日本一狭い",
+      "level": 1
+    },
+    {
+      "id": "pg-19",
+      "word": "改装したばかりの",
+      "level": 1,
+      "roles": [
+        "biz"
+      ]
+    },
+    {
+      "id": "pg-20",
+      "word": "誰も来ない",
+      "level": 1
+    },
+    {
+      "id": "pg-21",
+      "word": "山奥の",
+      "level": 1,
+      "roles": [
+        "loc"
+      ]
+    },
+    {
+      "id": "pg-22",
+      "word": "駅から徒歩30分の",
+      "level": 1,
+      "roles": [
+        "loc"
+      ]
+    },
+    {
+      "id": "pg-23",
+      "word": "県境の",
+      "level": 1,
+      "roles": [
+        "loc"
+      ]
+    },
+    {
+      "id": "pg-24",
+      "word": "離島の",
+      "level": 1,
+      "roles": [
+        "loc"
+      ]
+    },
+    {
+      "id": "pg-25",
+      "word": "地下にある",
+      "level": 1,
+      "roles": [
+        "loc"
+      ]
+    },
+    {
+      "id": "pg-26",
+      "word": "ビルの最上階の",
+      "level": 1,
+      "roles": [
+        "loc"
+      ]
+    },
+    {
+      "id": "pg-27",
+      "word": "商店街のはずれの",
+      "level": 1,
+      "roles": [
+        "loc"
+      ]
+    },
+    {
+      "id": "pg-28",
+      "word": "高速道路沿いの",
+      "level": 1,
+      "roles": [
+        "loc"
+      ]
+    }
+  ]
+}

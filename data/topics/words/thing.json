@@ -1,0 +1,632 @@
+{
+  "cat": "thing",
+  "words": [
+    {
+      "id": "th-01",
+      "word": "傘",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    },
+    {
+      "id": "th-02",
+      "word": "目覚まし時計",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    },
+    {
+      "id": "th-03",
+      "word": "領収書",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "nonproduct",
+        "written"
+      ]
+    },
+    {
+      "id": "th-04",
+      "word": "印鑑",
+      "tags": [
+        "職場",
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-05",
+      "word": "名刺",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "nonproduct",
+        "written"
+      ]
+    },
+    {
+      "id": "th-06",
+      "word": "回覧板",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "nonproduct",
+        "written"
+      ]
+    },
+    {
+      "id": "th-07",
+      "word": "保証書",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "nonproduct",
+        "written"
+      ]
+    },
+    {
+      "id": "th-08",
+      "word": "賞状",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "nonproduct",
+        "written",
+        "notable"
+      ]
+    },
+    {
+      "id": "th-09",
+      "word": "卒業アルバム",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "nonproduct",
+        "written"
+      ]
+    },
+    {
+      "id": "th-10",
+      "word": "蛍光ペン",
+      "tags": [
+        "学校",
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-11",
+      "word": "図鑑",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "nonproduct",
+        "written"
+      ]
+    },
+    {
+      "id": "th-12",
+      "word": "補助輪",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-13",
+      "word": "延長コード",
+      "tags": [
+        "家",
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-14",
+      "word": "加湿器",
+      "tags": [
+        "家",
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "fixed"
+      ]
+    },
+    {
+      "id": "th-15",
+      "word": "弁当箱",
+      "tags": [
+        "家",
+        "学校"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-17",
+      "word": "石けん",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-18",
+      "word": "湿布",
+      "tags": [
+        "病院",
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-19",
+      "word": "耳栓",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-20",
+      "word": "非常ベル",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "fixed",
+        "notable"
+      ]
+    },
+    {
+      "id": "th-21",
+      "word": "消火器",
+      "tags": [
+        "職場",
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "fixed",
+        "notable"
+      ]
+    },
+    {
+      "id": "th-22",
+      "word": "折りたたみ椅子",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-23",
+      "word": "三脚",
+      "tags": [
+        "旅"
+      ],
+      "level": 2
+    },
+    {
+      "id": "th-24",
+      "word": "双眼鏡",
+      "tags": [
+        "旅"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-25",
+      "word": "巻き尺",
+      "tags": [
+        "職場"
+      ],
+      "level": 2
+    },
+    {
+      "id": "th-26",
+      "word": "御守り",
+      "tags": [
+        "儀式",
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    },
+    {
+      "id": "th-27",
+      "word": "招き猫",
+      "tags": [
+        "儀式",
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    },
+    {
+      "id": "th-28",
+      "word": "靴べら",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-29",
+      "word": "万年筆",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-30",
+      "word": "片方だけの手袋",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "nonproduct"
+      ]
+    },
+    {
+      "id": "th-31",
+      "word": "目薬",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-32",
+      "word": "ハンガー",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-33",
+      "word": "リモコン",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-34",
+      "word": "洗濯バサミ",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-35",
+      "word": "まな板",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-36",
+      "word": "ポット",
+      "tags": [
+        "家"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-37",
+      "word": "ホッチキス",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-38",
+      "word": "社員証",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "written",
+        "nonproduct"
+      ]
+    },
+    {
+      "id": "th-39",
+      "word": "タイムカード",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "written",
+        "nonproduct"
+      ]
+    },
+    {
+      "id": "th-40",
+      "word": "クリップ",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-41",
+      "word": "上履き",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    },
+    {
+      "id": "th-42",
+      "word": "リコーダー",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    },
+    {
+      "id": "th-43",
+      "word": "給食袋",
+      "tags": [
+        "学校"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-44",
+      "word": "通知表",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "written",
+        "nonproduct"
+      ]
+    },
+    {
+      "id": "th-45",
+      "word": "ゴミ袋",
+      "tags": [
+        "近所"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-46",
+      "word": "自転車のカゴ",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "fixed"
+      ]
+    },
+    {
+      "id": "th-47",
+      "word": "レシート",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "written",
+        "nonproduct"
+      ]
+    },
+    {
+      "id": "th-48",
+      "word": "割り箸",
+      "tags": [
+        "店"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-49",
+      "word": "ポイントカード",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "written"
+      ]
+    },
+    {
+      "id": "th-50",
+      "word": "体温計",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    },
+    {
+      "id": "th-51",
+      "word": "マスク",
+      "tags": [
+        "病院"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-52",
+      "word": "松葉杖",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    },
+    {
+      "id": "th-53",
+      "word": "スーツケース",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    },
+    {
+      "id": "th-54",
+      "word": "温泉まんじゅう",
+      "tags": [
+        "旅"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-55",
+      "word": "絵はがき",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "written"
+      ]
+    },
+    {
+      "id": "th-56",
+      "word": "虫かご",
+      "tags": [
+        "自然"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-57",
+      "word": "麦わら帽子",
+      "tags": [
+        "自然"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-58",
+      "word": "数珠",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    },
+    {
+      "id": "th-59",
+      "word": "おみくじ",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "written"
+      ]
+    },
+    {
+      "id": "th-60",
+      "word": "鏡餅",
+      "tags": [
+        "儀式"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    },
+    {
+      "id": "th-61",
+      "word": "定期券",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1,
+      "roles": [
+        "written",
+        "nonproduct"
+      ]
+    },
+    {
+      "id": "th-62",
+      "word": "ヘルメット",
+      "tags": [
+        "乗り物"
+      ],
+      "level": 1
+    },
+    {
+      "id": "th-63",
+      "word": "ゼッケン",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "written"
+      ]
+    },
+    {
+      "id": "th-64",
+      "word": "ホイッスル",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "notable"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,542 @@
+{
+  "cat": "org",
+  "words": [
+    {
+      "id": "or-01",
+      "word": "町内会",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-02",
+      "word": "消防団",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-03",
+      "word": "商店街",
+      "tags": [
+        "店",
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "sells_street",
+        "service"
+      ]
+    },
+    {
+      "id": "or-05",
+      "word": "野球部",
+      "tags": [
+        "学校",
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-06",
+      "word": "合唱団",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-07",
+      "word": "図書委員会",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-08",
+      "word": "修学旅行の班",
+      "tags": [
+        "学校",
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-09",
+      "word": "幼稚園",
+      "tags": [
+        "学校"
+      ],
+      "level": 1
+    },
+    {
+      "id": "or-10",
+      "word": "教習所",
+      "tags": [
+        "乗り物",
+        "学校"
+      ],
+      "level": 1
+    },
+    {
+      "id": "or-11",
+      "word": "ラーメン屋",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-12",
+      "word": "パン屋",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-13",
+      "word": "弁当屋",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-14",
+      "word": "温泉旅館",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "service"
+      ]
+    },
+    {
+      "id": "or-15",
+      "word": "動物園",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "service"
+      ]
+    },
+    {
+      "id": "or-16",
+      "word": "水族館",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "service"
+      ]
+    },
+    {
+      "id": "or-17",
+      "word": "銀行",
+      "tags": [
+        "職場"
+      ],
+      "level": 1,
+      "roles": [
+        "official"
+      ]
+    },
+    {
+      "id": "or-18",
+      "word": "保険会社",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "or-19",
+      "word": "質屋",
+      "tags": [
+        "店"
+      ],
+      "level": 2,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-20",
+      "word": "郵便局",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "official"
+      ]
+    },
+    {
+      "id": "or-21",
+      "word": "交番",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "official"
+      ]
+    },
+    {
+      "id": "or-22",
+      "word": "眼鏡屋",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-23",
+      "word": "床屋",
+      "tags": [
+        "近所",
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "service"
+      ]
+    },
+    {
+      "id": "or-24",
+      "word": "引っ越し業者",
+      "tags": [
+        "家"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-25",
+      "word": "探偵事務所",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "or-26",
+      "word": "劇団",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-26",
+      "word": "定食屋",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-27",
+      "word": "中華料理店",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-28",
+      "word": "花屋",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-29",
+      "word": "本屋",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-30",
+      "word": "クリーニング店",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "service"
+      ]
+    },
+    {
+      "id": "or-31",
+      "word": "喫茶店",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-32",
+      "word": "駄菓子屋",
+      "tags": [
+        "店"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-33",
+      "word": "IT企業",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "or-34",
+      "word": "工場",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "or-35",
+      "word": "出版社",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "or-36",
+      "word": "広告代理店",
+      "tags": [
+        "職場"
+      ],
+      "level": 1
+    },
+    {
+      "id": "or-37",
+      "word": "塾",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "service"
+      ]
+    },
+    {
+      "id": "or-38",
+      "word": "生徒会",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-39",
+      "word": "吹奏楽部",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-40",
+      "word": "大学のサークル",
+      "tags": [
+        "学校"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-41",
+      "word": "歯科医院",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "service"
+      ]
+    },
+    {
+      "id": "or-42",
+      "word": "動物病院",
+      "tags": [
+        "病院"
+      ],
+      "level": 1,
+      "roles": [
+        "service"
+      ]
+    },
+    {
+      "id": "or-43",
+      "word": "バス会社",
+      "tags": [
+        "旅"
+      ],
+      "level": 1
+    },
+    {
+      "id": "or-44",
+      "word": "旅行代理店",
+      "tags": [
+        "旅"
+      ],
+      "level": 1,
+      "roles": [
+        "sells",
+        "service"
+      ]
+    },
+    {
+      "id": "or-45",
+      "word": "自治会",
+      "tags": [
+        "近所"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-46",
+      "word": "消費者センター",
+      "tags": [
+        "近所"
+      ],
+      "level": 1
+    },
+    {
+      "id": "or-47",
+      "word": "忍者集団",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-48",
+      "word": "魔法学校",
+      "tags": [
+        "非日常"
+      ],
+      "level": 1
+    },
+    {
+      "id": "or-49",
+      "word": "サッカーチーム",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "noplace"
+      ]
+    },
+    {
+      "id": "or-50",
+      "word": "ボクシングジム",
+      "tags": [
+        "運動"
+      ],
+      "level": 1,
+      "roles": [
+        "service"
+      ]
+    }
+  ]
+}
