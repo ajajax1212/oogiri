@@ -1,13 +1,19 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  FLIP_H, FLIP_W, emptyFlip,
-  type Flip, type Stroke, type StrokeColor, type TextItem,
+  FLIP_H, FLIP_W, FONTS, TEXT_MAX, TEXT_MIN, emptyFlip,
+  type Flip, type FontKey, type Stroke, type StrokeColor, type TextItem,
 } from '../engine/types';
 import { LIMIT } from '../net/events';
-import { StrokeLayer, TextLayer, textBox } from './Flip';
+import { FONT_LABEL, StrokeLayer, boxStyle } from './Flip';
 
 /**
  * フリップを書く（SPEC.md §4.2）。手書きと文字は1枚に混在できる。
+ *
+ * 文字は**パワポのようなテキストボックス**にしてある。板を押せば箱ができ、
+ * その場で打てて、掴んで動かし、角で幅を変え、大きさと書体を選べる。
+ * 「小・中・大」の3段だったころは、囁きと絶叫を書き分けられなかった。
+ * **声色を文字で出せることが、フリップ大喜利の表現の幅そのもの**なので、
+ * 大きさは連続値、書体は系統の違うものを並べてある。
  *
  * 消しゴムは持たない。マウスで細かく消すのは実際やりにくいので、
  * ストローク単位の「1つ戻す」で足りる。
@@ -22,55 +28,89 @@ type Props = {
 };
 
 const WIDTHS = [1, 2, 3] as const;
-const SIZES = [1, 2, 3] as const;
+type Tool = 'pen' | 'text';
+
+const newBox = (x: number, y: number, font: FontKey, size: number): TextItem => ({
+  text: '', x, y, w: 900, size, font, rot: 0, align: 'center',
+});
 
 export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
-  // 色は黒だけ。選択肢を出さない分、太さに場所を譲る
-  const color: StrokeColor = 'black';
+  const [tool, setTool] = useState<Tool>('text');
+  const color: StrokeColor = 'black'; // 色は黒だけ。選択肢を出さない分、他に場所を譲る
   const [width, setWidth] = useState<Stroke['width']>(2);
-  const [size, setSize] = useState<TextItem['size']>(2);
-  const [draft, setDraft] = useState('');
+  const [font, setFont] = useState<FontKey>('gothic');
+  const [size, setSize] = useState(120);
   const [sel, setSel] = useState<number | null>(null);
-  const svg = useRef<SVGSVGElement | null>(null);
-  const drawing = useRef<number[] | null>(null);
-  const dragging = useRef<number | null>(null);
+  const [editing, setEditing] = useState<number | null>(null);
+
+  const wrap = useRef<HTMLDivElement | null>(null);
+  const drawing = useRef(false);
+  const drag = useRef<{ i: number; dx: number; dy: number } | null>(null);
+  const resize = useRef<{ i: number; side: -1 | 1 } | null>(null);
+  const area = useRef<HTMLTextAreaElement | null>(null);
+
+  const texts = flip.texts;
+  const cur = sel !== null ? texts[sel] : null;
 
   /** 画面座標を論理座標に直す。CSS で縮んでいても書いた位置がずれない */
-  const toLogical = useCallback((e: React.PointerEvent): [number, number] => {
-    const r = svg.current!.getBoundingClientRect();
+  const toLogical = useCallback((e: { clientX: number; clientY: number }): [number, number] => {
+    const r = wrap.current!.getBoundingClientRect();
     const x = ((e.clientX - r.left) / r.width) * FLIP_W;
     const y = ((e.clientY - r.top) / r.height) * FLIP_H;
     return [Math.min(FLIP_W, Math.max(0, x)), Math.min(FLIP_H, Math.max(0, y))];
   }, []);
 
+  useEffect(() => {
+    if (editing !== null) area.current?.focus();
+  }, [editing]);
+
+  const patch = (i: number, p: Partial<TextItem>) =>
+    onChange({ ...flip, texts: texts.map((t, k) => (k === i ? { ...t, ...p } : t)) });
+
+  // --- 板の上での操作 ---
+
   const down = (e: React.PointerEvent) => {
     if (disabled) return;
-    svg.current?.setPointerCapture(e.pointerId);
-    if (dragging.current !== null) return; // 文字をつかんでいる
-    setSel(null);
+    wrap.current?.setPointerCapture(e.pointerId);
     const [x, y] = toLogical(e);
-    drawing.current = [x, y];
+
+    if (tool === 'pen') {
+      setSel(null);
+      setEditing(null);
+      drawing.current = true;
+      onActivity?.(true);
+      onChange({ ...flip, strokes: [...flip.strokes, { color, width, points: [x, y] }] });
+      return;
+    }
+
+    // 文字の道具。何も無いところを押したら、そこに箱を作ってすぐ打てるようにする
+    if (texts.length >= LIMIT.texts) { setSel(null); setEditing(null); return; }
+    const i = texts.length;
+    onChange({ ...flip, texts: [...texts, newBox(x, y, font, size)] });
+    setSel(i);
+    setEditing(i);
     onActivity?.(true);
-    onChange({ ...flip, strokes: [...flip.strokes, { color, width, points: [x, y] }] });
   };
 
   const move = (e: React.PointerEvent) => {
     if (disabled) return;
     const [x, y] = toLogical(e);
 
-    if (dragging.current !== null) {
-      const texts = flip.texts.map((t, i) => {
-        if (i !== dragging.current) return t;
-        // 板の外へ持ち出せないようにする。折り返したあとの大きさで測るので、
-        // 長い文でも端が切れない
-        const { w, h } = textBox(t);
-        return {
-          ...t,
-          x: Math.min(FLIP_W - w / 2, Math.max(w / 2, x)),
-          y: Math.min(FLIP_H - h / 2, Math.max(h / 2, y)),
-        };
+    if (resize.current) {
+      const { i, side } = resize.current;
+      const t = texts[i];
+      // 掴んだ側の縁だけを動かす。反対の縁は動かない（パワポと同じ手触り）
+      const edge = t.x + (side * t.w) / 2;
+      const w = Math.max(120, Math.min(FLIP_W, t.w + side * (x - edge)));
+      patch(i, { w, x: t.x + (side * (w - t.w)) / 2 });
+      return;
+    }
+    if (drag.current) {
+      const { i, dx, dy } = drag.current;
+      patch(i, {
+        x: Math.min(FLIP_W, Math.max(0, x - dx)),
+        y: Math.min(FLIP_H, Math.max(0, y - dy)),
       });
-      onChange({ ...flip, texts });
       return;
     }
     if (!drawing.current) return;
@@ -78,107 +118,187 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
     if (!last) return;
     // 近すぎる点は捨てる。1本の線が数千点になると通信も描画も重い
     const n = last.points.length;
-    const dx = x - last.points[n - 2];
-    const dy = y - last.points[n - 1];
-    if (dx * dx + dy * dy < 36) return;
+    const ddx = x - last.points[n - 2];
+    const ddy = y - last.points[n - 1];
+    if (ddx * ddx + ddy * ddy < 36) return;
     const strokes = [...flip.strokes];
     strokes[strokes.length - 1] = { ...last, points: [...last.points, x, y] };
     onChange({ ...flip, strokes });
   };
 
   const up = () => {
-    drawing.current = null;
-    dragging.current = null;
+    drawing.current = false;
+    drag.current = null;
+    resize.current = null;
+    if (editing === null) onActivity?.(false);
+  };
+
+  const grabBox = (i: number) => (e: React.PointerEvent) => {
+    if (disabled) return;
+    e.stopPropagation();
+    wrap.current?.setPointerCapture(e.pointerId);
+    const [x, y] = toLogical(e);
+    setSel(i);
+    drag.current = { i, dx: x - texts[i].x, dy: y - texts[i].y };
+  };
+
+  const grabEdge = (i: number, side: -1 | 1) => (e: React.PointerEvent) => {
+    if (disabled) return;
+    e.stopPropagation();
+    wrap.current?.setPointerCapture(e.pointerId);
+    setSel(i);
+    resize.current = { i, side };
+  };
+
+  // --- 道具箱 ---
+
+  const dirty = flip.strokes.length > 0 || texts.length > 0;
+
+  /** 中身が空のまま離れた箱は捨てる。押し間違いで空箱が残ると邪魔なだけ */
+  const dropEmpty = () => {
+    const keep = texts.filter((t) => t.text.trim());
+    if (keep.length !== texts.length) {
+      onChange({ ...flip, texts: keep });
+      setSel(null);
+    }
+    setEditing(null);
     onActivity?.(false);
   };
 
-  const grabText = (i: number, e: React.PointerEvent) => {
-    if (disabled) return;
-    e.stopPropagation();
-    svg.current?.setPointerCapture(e.pointerId);
-    dragging.current = i;
-    setSel(i);
-  };
-
-  const putText = () => {
-    const text = draft.trim();
-    if (!text || flip.texts.length >= LIMIT.texts) return;
-    onChange({
-      ...flip,
-      texts: [...flip.texts, { text: text.slice(0, LIMIT.textLen), x: FLIP_W / 2, y: FLIP_H / 2, size }],
-    });
-    setDraft('');
-    setSel(flip.texts.length);
-  };
-
-  const dirty = flip.strokes.length > 0 || flip.texts.length > 0;
-
   const undo = () => {
-    // 直前に足したものを1つ戻す。文字を足した直後なら文字、線なら線
-    if (flip.texts.length && sel !== null) {
-      onChange({ ...flip, texts: flip.texts.filter((_, i) => i !== sel) });
+    if (sel !== null && texts[sel]) {
+      onChange({ ...flip, texts: texts.filter((_, i) => i !== sel) });
       setSel(null);
+      setEditing(null);
       return;
     }
     if (flip.strokes.length) onChange({ ...flip, strokes: flip.strokes.slice(0, -1) });
-    else if (flip.texts.length) onChange({ ...flip, texts: flip.texts.slice(0, -1) });
+    else if (texts.length) onChange({ ...flip, texts: texts.slice(0, -1) });
   };
 
   return (
     <div>
       <div className="tools">
-        {WIDTHS.map((w) => (
-          <button key={w} className="w" data-on={width === w ? 1 : 0} onClick={() => setWidth(w)} disabled={disabled}>
-            {w === 1 ? '細' : w === 2 ? '中' : '太'}
-          </button>
-        ))}
-        <span className="sep" />
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value.slice(0, LIMIT.textLen))}
-          onKeyDown={(e) => e.key === 'Enter' && putText()}
-          placeholder="文字を打つ"
-          disabled={disabled}
-          className="draft"
-        />
-        {SIZES.map((s) => (
-          <button key={s} className="w" data-on={size === s ? 1 : 0} onClick={() => setSize(s)} disabled={disabled}>
-            {s === 1 ? '小' : s === 2 ? '中' : '大'}
-          </button>
-        ))}
-        {/* 取り消し系は「乗せる」の左。実行系と並べると押し間違える */}
-        <button className="icon" onClick={undo} disabled={disabled || !dirty} title="1つ戻す" aria-label="1つ戻す">
-          ↩
+        <button className="w" data-on={tool === 'text' ? 1 : 0} onClick={() => setTool('text')} disabled={disabled}>
+          文字
         </button>
+        <button className="w" data-on={tool === 'pen' ? 1 : 0} onClick={() => { setTool('pen'); setEditing(null); }} disabled={disabled}>
+          ペン
+        </button>
+        <span className="sep" />
+
+        {tool === 'pen' ? (
+          WIDTHS.map((w) => (
+            <button key={w} className="w" data-on={width === w ? 1 : 0} onClick={() => setWidth(w)} disabled={disabled}>
+              {w === 1 ? '細' : w === 2 ? '中' : '太'}
+            </button>
+          ))
+        ) : (
+          <>
+            {FONTS.map((f) => (
+              <button
+                key={f}
+                className="font"
+                data-on={(cur?.font ?? font) === f ? 1 : 0}
+                style={{ fontFamily: `var(--f-${f})` }}
+                onClick={() => { setFont(f); if (sel !== null) patch(sel, { font: f }); }}
+                disabled={disabled}
+              >
+                {FONT_LABEL[f]}
+              </button>
+            ))}
+            <span className="sep" />
+            <label className="range" title="文字の大きさ">
+              <span>大きさ</span>
+              <input
+                type="range"
+                min={TEXT_MIN}
+                max={TEXT_MAX}
+                value={cur?.size ?? size}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setSize(v);
+                  if (sel !== null) patch(sel, { size: v });
+                }}
+                disabled={disabled}
+              />
+            </label>
+            <label className="range" title="傾き">
+              <span>傾き</span>
+              <input
+                type="range"
+                min={-30}
+                max={30}
+                value={cur?.rot ?? 0}
+                onChange={(e) => sel !== null && patch(sel, { rot: Number(e.target.value) })}
+                disabled={disabled || sel === null}
+              />
+            </label>
+          </>
+        )}
+
+        <span style={{ flex: 1 }} />
+        <button className="icon" onClick={undo} disabled={disabled || !dirty} title="1つ戻す" aria-label="1つ戻す">↩</button>
         <button
           className="icon"
-          onClick={() => { onChange(emptyFlip()); setSel(null); }}
+          onClick={() => { onChange(emptyFlip()); setSel(null); setEditing(null); }}
           disabled={disabled || !dirty}
           title="全部消す"
           aria-label="全部消す"
         >
           全消
         </button>
-        <button onClick={putText} disabled={disabled || !draft.trim()}>フリップに乗せる</button>
       </div>
 
-      <svg
-        ref={svg}
-        className="board"
-        viewBox={`0 0 ${FLIP_W} ${FLIP_H}`}
-        style={{ cursor: disabled ? 'default' : 'crosshair', opacity: disabled ? .7 : 1 }}
+      <div
+        ref={wrap}
+        className="board edit"
+        style={{ cursor: disabled ? 'default' : tool === 'pen' ? 'crosshair' : 'text', opacity: disabled ? .7 : 1 }}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
         onPointerCancel={up}
       >
-        <StrokeLayer strokes={flip.strokes} />
-        <TextLayer texts={flip.texts} onDown={grabText} />
-        {sel !== null && flip.texts[sel] && (
-          <circle cx={flip.texts[sel].x} cy={flip.texts[sel].y} r={10} fill="#c9a227" />
-        )}
-      </svg>
-      <p className="hint">マウスでそのまま描けます。乗せた文字はドラッグで動かせます。</p>
+        <svg className="ink" viewBox={`0 0 ${FLIP_W} ${FLIP_H}`}>
+          <StrokeLayer strokes={flip.strokes} />
+        </svg>
+
+        {texts.map((t, i) => (
+          <div
+            key={i}
+            className="tbox"
+            data-sel={sel === i ? 1 : 0}
+            style={boxStyle(t)}
+            onPointerDown={editing === i ? undefined : grabBox(i)}
+            onDoubleClick={(e) => { e.stopPropagation(); setEditing(i); }}
+          >
+            {editing === i ? (
+              <textarea
+                ref={area}
+                value={t.text}
+                onChange={(e) => patch(i, { text: e.target.value.slice(0, LIMIT.textLen) })}
+                onBlur={dropEmpty}
+                onPointerDown={(e) => e.stopPropagation()}
+                rows={1}
+              />
+            ) : (
+              t.text || '文字を入れる'
+            )}
+            {sel === i && !disabled && (
+              <>
+                <span className="grip l" onPointerDown={grabEdge(i, -1)} />
+                <span className="grip r" onPointerDown={grabEdge(i, 1)} />
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <p className="hint">
+        {tool === 'text'
+          ? '板を押すと文字の箱ができます。掴んで移動、両端の印で幅、書体と大きさは上で。書き直しはダブルクリック。'
+          : 'マウスでそのまま描けます。'}
+      </p>
     </div>
   );
 }

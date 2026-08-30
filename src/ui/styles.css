@@ -356,7 +356,65 @@ input::placeholder { color: #6d6143; }
   max-width: min(100%, calc(var(--boardh) * 1.6));
   margin: 0 auto;
   touch-action: none;
+  /* 文字は HTML の箱で重ねる（SVG の text は折り返さないため）。
+     container-type を持たせて、文字の大きさを板の幅に追従させる */
+  position: relative;
+  aspect-ratio: 16 / 10;
+  container-type: inline-size;
+  overflow: hidden;
 }
+/* 線の層。板いっぱいに敷いて、上に文字の箱を重ねる */
+.board .ink { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* --- 文字の箱 --- */
+
+.tbox { user-select: none; }
+.board.edit .tbox { cursor: move; outline: 1px dashed rgba(0, 0, 0, .18); }
+.board.edit .tbox[data-sel='1'] { outline: 2px solid var(--gold); }
+.board.edit .tbox:empty::before { content: '文字を入れる'; opacity: .3; }
+.tbox textarea {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  resize: none;
+  overflow: hidden;
+  /* 入力欄の高さを中身に合わせる。行が増えたら箱ごと伸びる */
+  field-sizing: content;
+  outline: none;
+}
+/* 幅を変える印。板の外へはみ出さないよう内側に置く */
+.grip {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 44px;
+  margin-top: -22px;
+  background: var(--gold);
+  border: 2px solid var(--black);
+  border-radius: 3px;
+  cursor: ew-resize;
+}
+.grip.l { left: -7px; }
+.grip.r { right: -7px; }
+
+/* 道具箱で書体を見せるための実物。Flip.tsx の FONT_STACK と揃える */
+:root {
+  --f-gothic: 'Yu Gothic', 'YuGothic', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+  --f-mincho: 'Yu Mincho', 'YuMincho', 'Hiragino Mincho ProN', 'MS PMincho', serif;
+  --f-round: 'UD デジタル教科書体 NK-R', 'UD Digi Kyokasho NK-R', 'Hiragino Maru Gothic ProN', 'Meiryo', sans-serif;
+  --f-pop: 'HGP創英角ﾎﾟｯﾌﾟ体', 'HGSoeiKakupoptai', 'UD デジタル教科書体 NK-R', 'Hiragino Maru Gothic ProN', sans-serif;
+  --f-brush: 'HGP行書体', 'HGGyoshotai', '游教科書体', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  --f-mono: 'BIZ UDGothic', 'MS Gothic', 'Osaka-Mono', monospace;
+}
+.tools .font { padding: 8px 12px; font-size: 15px; }
+.tools .range { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); }
+.tools .range input { width: 108px; accent-color: var(--yellow); }
 .board.lift { animation: lift .55s cubic-bezier(.2, .9, .25, 1) both; }
 @keyframes lift { from { opacity: 0; transform: translateY(70px) scale(.96); } to { opacity: 1; transform: none; } }
 

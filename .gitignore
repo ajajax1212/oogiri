@@ -5,3 +5,6 @@ dist-server/
 
 # 生の音源置き場。配るのは public/sfx/ の方だけ（senryu-game と同じ）
 sound/
+
+# お題のログ。手元で報告を作るためのもので、共有しない
+logs/

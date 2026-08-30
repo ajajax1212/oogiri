@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { checkFlip, checkTopicText, checkWord, cleanName, EV, LIMIT } from './events';
-import { FLIP_H, FLIP_W, type Flip } from '../engine/types';
+import {
+  FLIP_H, FLIP_W, FONTS, TEXT_MAX, TEXT_MIN,
+  type Flip, type TextItem,
+} from '../engine/types';
 
 /**
  * サーバー側の検証（SPEC.md §4.4 / §9.2 / TOPIC-GEN.md §9.1）。
@@ -69,13 +72,35 @@ describe('checkFlip', () => {
     expect(ok({ strokes: long })).toBeNull();
   });
 
+  /** 文字の箱1つ。既定は「板の真ん中に置いた普通のゴシック」 */
+  const t = (over: Partial<TextItem> = {}): TextItem => ({
+    text: 'あ', x: 800, y: 500, w: 900, size: 120, font: 'gothic', rot: 0, align: 'center', ...over,
+  });
+
   it('文字要素の数と長さの上限を守る', () => {
-    const t = (text: string) => ({ text, x: 10, y: 10, size: 2 as const });
-    expect(ok({ texts: Array.from({ length: LIMIT.texts + 1 }, () => t('あ')) })).toBeNull();
-    expect(ok({ texts: [t('あ'.repeat(LIMIT.textLen + 1))] })).toBeNull();
-    expect(ok({ texts: [t('  ')] })).toBeNull();
-    expect(ok({ texts: [{ text: 'あ', x: FLIP_W + 1, y: 0, size: 2 }] })).toBeNull();
-    expect(ok({ texts: [t('あ'.repeat(LIMIT.textLen))] })).not.toBeNull();
+    expect(ok({ texts: Array.from({ length: LIMIT.texts + 1 }, () => t()) })).toBeNull();
+    expect(ok({ texts: [t({ text: 'あ'.repeat(LIMIT.textLen + 1) })] })).toBeNull();
+    expect(ok({ texts: [t({ text: '  ' })] })).toBeNull();
+    expect(ok({ texts: [t({ x: FLIP_W + 1 })] })).toBeNull();
+    expect(ok({ texts: [t({ text: 'あ'.repeat(LIMIT.textLen) })] })).not.toBeNull();
+  });
+
+  it('箱の幅・大きさ・傾きの範囲を守る', () => {
+    expect(ok({ texts: [t({ w: 10 })] })).toBeNull();          // 狭すぎる
+    expect(ok({ texts: [t({ w: FLIP_W + 1 })] })).toBeNull();
+    expect(ok({ texts: [t({ size: TEXT_MIN - 1 })] })).toBeNull();
+    expect(ok({ texts: [t({ size: TEXT_MAX + 1 })] })).toBeNull();
+    expect(ok({ texts: [t({ rot: 45 })] })).toBeNull();
+    // 大きさは段階ではなく実数。囁きから絶叫まで作れることが要件
+    expect(ok({ texts: [t({ size: 37.5 })] })).not.toBeNull();
+    expect(ok({ texts: [t({ size: TEXT_MIN })] })).not.toBeNull();
+    expect(ok({ texts: [t({ size: TEXT_MAX })] })).not.toBeNull();
+  });
+
+  it('知らない書体や行揃えを拒否する', () => {
+    expect(checkFlip({ strokes: [], texts: [{ ...t(), font: 'comic' }] })).toBeNull();
+    expect(checkFlip({ strokes: [], texts: [{ ...t(), align: 'justify' }] })).toBeNull();
+    for (const f of FONTS) expect(ok({ texts: [t({ font: f })] })).not.toBeNull();
   });
 
   it('形が違うものを拒否する', () => {

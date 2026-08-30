@@ -10,7 +10,10 @@ import type { Flip, GameState, TopicRecord } from './types';
  * JSON にしてから文字列で探す。将来ネストが増えても漏れを拾える。
  */
 
-const flip: Flip = { strokes: [], texts: [{ text: 'ここに答え', x: 800, y: 500, size: 2 }] };
+const flip: Flip = {
+  strokes: [],
+  texts: [{ text: 'ここに答え', x: 800, y: 500, w: 900, size: 120, font: 'gothic', rot: 0, align: 'center' }],
+};
 
 const rec: TopicRecord = {
   id: 't1', text: 'お題', patternId: 'at-01', type: 'attr', endingId: 'at-01#0',

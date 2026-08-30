@@ -1,4 +1,7 @@
-import { FLIP_H, FLIP_W, type BroughtWord, type Flip } from '../engine/types';
+import {
+  FLIP_H, FLIP_W, FONTS, TEXT_MAX, TEXT_MIN,
+  type BroughtWord, type Flip,
+} from '../engine/types';
 
 /**
  * Socket.IO のイベント名。サーバーとクライアントの両方がここから読む。
@@ -74,7 +77,14 @@ export function checkFlip(v: unknown): Flip | null {
     if (!t || typeof t.text !== 'string') return null;
     if (!t.text.trim() || Array.from(t.text).length > LIMIT.textLen) return null;
     if (!finiteIn(t.x, FLIP_W) || !finiteIn(t.y, FLIP_H)) return null;
-    if (![1, 2, 3].includes(t.size)) return null;
+    if (!finiteIn(t.w, FLIP_W) || t.w < 40) return null;
+    // 大きさは段階ではなく実数。範囲だけ見る（囁きから絶叫まで作れるように）
+    if (typeof t.size !== 'number' || !Number.isFinite(t.size)) return null;
+    if (t.size < TEXT_MIN || t.size > TEXT_MAX) return null;
+    if (!FONTS.includes(t.font)) return null;
+    if (typeof t.rot !== 'number' || !Number.isFinite(t.rot)) return null;
+    if (t.rot < -30 || t.rot > 30) return null;
+    if (!['left', 'center', 'right'].includes(t.align)) return null;
   }
   return { strokes: f.strokes, texts: f.texts };
 }

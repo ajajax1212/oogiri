@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createGame, DELAY, reduce, type Ctx } from '../src/engine/reducer';
 import { mulberry32, TopicSource, type TopicData } from '../src/engine/topic';
 import type { Action, GameState, TopicRecord } from '../src/engine/types';
+import { logTopic } from './log';
 
 /**
  * 部屋・席・token・時計だけを持つ。**ゲームのルールは知らない。**
@@ -53,10 +54,19 @@ export function createRoom(data: TopicData): Room {
 export const getRoom = (code: string): Room | undefined => rooms.get(code?.toUpperCase?.() ?? '');
 
 export function ctxOf(room: Room): Ctx {
+  const players = () => room.state.players.filter((p) => p.connected).length;
   return {
     now: Date.now(),
-    nextTopic: () => room.source.next(room.state.history, room.state.brought, room.state.handmade),
-    burnTopic: (rec: TopicRecord) => room.source.burn(rec),
+    nextTopic: () => {
+      const rec = room.source.next(room.state.history, room.state.brought, room.state.handmade);
+      // 出た数を数えないと、引き直しの「率」が出せない
+      if (rec) logTopic('served', room.code, rec, players());
+      return rec;
+    },
+    burnTopic: (rec: TopicRecord) => {
+      logTopic('discarded', room.code, rec, players());
+      room.source.burn(rec);
+    },
   };
 }
 

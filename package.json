@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && vite build && vite build --config vite.config.server.ts",
     "start": "node dist-server/index.js",
     "test": "vitest run",
-    "topics:preview": "node scripts/preview-topics.mjs"
+    "topics:preview": "node scripts/preview-topics.mjs",
+    "topics:report": "node scripts/topic-report.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

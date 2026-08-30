@@ -18,12 +18,40 @@ export type Stroke = {
   points: number[];
 };
 
+/**
+ * 書体。**声色を文字で表すための道具**なので、意味の違うものを並べる
+ * （太いゴシックで叫ぶ／細い明朝でぼそっと言う／筆で断言する）。
+ * 端末に入っている書体だけを使う。Web フォントは読み込まない（依存を増やさない）。
+ */
+export type FontKey = 'gothic' | 'mincho' | 'round' | 'pop' | 'brush' | 'mono';
+
+export const FONTS: readonly FontKey[] = ['gothic', 'mincho', 'round', 'pop', 'brush', 'mono'];
+
+/**
+ * 文字の箱（テキストボックス）。
+ *
+ * `size` は論理px の実数。段階ではなく連続値なので、囁きから絶叫まで自由に作れる。
+ * `w` は箱の幅で、**折り返しはこの幅で決まる**。改行は本文の `\n` で明示もできる。
+ */
 export type TextItem = {
   text: string;
+  /** 箱の中心（論理座標） */
   x: number;
   y: number;
-  size: 1 | 2 | 3;
+  /** 箱の幅（論理px）。ここで折り返す */
+  w: number;
+  /** 文字の大きさ（論理px） */
+  size: number;
+  font: FontKey;
+  /** 傾き（度）。斜めにすると勢いが出る */
+  rot: number;
+  /** 行揃え */
+  align: 'left' | 'center' | 'right';
 };
+
+/** 文字の大きさの範囲。狭いと声の幅が出ないので広く取る */
+export const TEXT_MIN = 24;
+export const TEXT_MAX = 340;
 
 export type Flip = {
   strokes: Stroke[];
