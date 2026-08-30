@@ -4,7 +4,7 @@ import {
   type Flip, type Stroke, type StrokeColor, type TextItem,
 } from '../engine/types';
 import { LIMIT } from '../net/events';
-import { StrokeLayer, TextLayer } from './Flip';
+import { StrokeLayer, TextLayer, textBox } from './Flip';
 
 /**
  * フリップを書く（SPEC.md §4.2）。手書きと文字は1枚に混在できる。
@@ -59,7 +59,17 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
     const [x, y] = toLogical(e);
 
     if (dragging.current !== null) {
-      const texts = flip.texts.map((t, i) => (i === dragging.current ? { ...t, x, y } : t));
+      const texts = flip.texts.map((t, i) => {
+        if (i !== dragging.current) return t;
+        // 板の外へ持ち出せないようにする。折り返したあとの大きさで測るので、
+        // 長い文でも端が切れない
+        const { w, h } = textBox(t);
+        return {
+          ...t,
+          x: Math.min(FLIP_W - w / 2, Math.max(w / 2, x)),
+          y: Math.min(FLIP_H - h / 2, Math.max(h / 2, y)),
+        };
+      });
       onChange({ ...flip, texts });
       return;
     }

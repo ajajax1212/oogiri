@@ -85,11 +85,13 @@ const SFX: Record<SfxName, SfxSpec> = {
  */
 const FILES: Partial<Record<SfxName, { url: string; gain: number }>> = {
   strike: { url: '/sfx/strike.mp3', gain: 0.9 },
+  lift: { url: '/sfx/lift.mp3', gain: 0.9 },
   tally: { url: '/sfx/tally.mp3', gain: 0.5 },
-  small: { url: '/sfx/small.wav', gain: 0.7 },
-  medium: { url: '/sfx/medium.wav', gain: 0.8 },
-  big: { url: '/sfx/big.wav', gain: 0.9 },
-  perfect: { url: '/sfx/perfect.wav', gain: 1.0 },
+  // 判定の4つは素材が他より大きく、そのままだと殴られる感じになる。半分に落とす
+  small: { url: '/sfx/small.wav', gain: 0.35 },
+  medium: { url: '/sfx/medium.wav', gain: 0.4 },
+  big: { url: '/sfx/big.wav', gain: 0.45 },
+  perfect: { url: '/sfx/perfect.wav', gain: 0.5 },
 };
 
 const buffers = new Map<SfxName, AudioBuffer>();
