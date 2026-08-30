@@ -37,7 +37,9 @@ export type SfxName =
   /** 判定：満点大笑い。ここだけ別格 */
   | 'perfect'
   /** 集計中。ここを黙らせると、最後に押した人だけ1.2秒の無音になる */
-  | 'tally';
+  | 'tally'
+  /** 判定が終わって板へ戻る。「次を書ける」の合図 */
+  | 'resume';
 
 /**
  * 音ごとの大きさと長さ。
@@ -51,7 +53,7 @@ export type SfxName =
  * 実際に各声へ渡す係数は `係数 × (peak / stack)`。
  *
  * `dur` は鳴り終わるまでの秒数。次の場面と被らないかを机上で確かめるために書く
- * （intro 3.2秒 / declared 2.0秒 / tally 1.2秒 / result 4.5秒。engine 側の DELAY）。
+ * （intro 5.2秒 / declared 2.0秒 / tally 1.2秒 / result 4.5秒。engine 側の DELAY）。
  */
 type SfxSpec = {
   stack: number;
@@ -74,6 +76,8 @@ const SFX: Record<SfxName, SfxSpec> = {
   // 別格。大きさより「構成」で格を出す（ロール → 大一撃 → 金の4音）
   perfect: { stack: 1.0, peak: 0.32, dur: 2.10 },
   tally: { stack: 1.0, peak: 0.14, dur: 1.20 },
+  // 戻ってきた合図。次の一手を促すだけなので、判定より小さく短く
+  resume: { stack: 1.0, peak: 0.11, dur: 0.45 },
 };
 
 /**
@@ -85,6 +89,8 @@ const SFX: Record<SfxName, SfxSpec> = {
  */
 const FILES: Partial<Record<SfxName, { url: string; gain: number }>> = {
   strike: { url: '/sfx/strike.mp3', gain: 0.9 },
+  // 本人が用意した「和太鼓でドン」。宣言の一打がこれまで合成音だけだった
+  declare: { url: '/sfx/declare.mp3', gain: 0.6 },
   lift: { url: '/sfx/lift.mp3', gain: 0.9 },
   tally: { url: '/sfx/tally.mp3', gain: 0.5 },
   // 判定の4つは素材が他より大きく、そのままだと殴られる感じになる。半分に落とす
@@ -291,6 +297,9 @@ async function load(): Promise<void> {
       }
     }),
   );
+  // 取り損ねた音は次の機会に取り直す。1回失敗しただけで合成音に固定されると、
+  // 一瞬の回線の揺れがその場に居る間ずっと響く
+  loading = false;
 }
 
 export function play(name: SfxName): void {
@@ -351,6 +360,14 @@ function synth(ac: AudioContext, name: SfxName, g: number): void {
       taiko(ac, { at: 0.42, gain: 0.4 * g, from: 116, to: 56, dur: 0.16 });
       break;
 
+    case 'resume':
+      // 板が戻る。lift を裏返した形（息を下げ、二音で上がって終わる）。
+      // 判定の余韻の直後に鳴るので、太鼓は使わず息と細い二音だけにする
+      noise(ac, { dur: 0.22, freq: 2200, to: 420, q: 0.8, gain: 0.42 * g });
+      bell(ac, { at: 0.06, gain: 0.30 * g, dur: 0.30, freq: 587.33 });
+      bell(ac, { at: 0.17, gain: 0.28 * g, dur: 0.36, freq: 880 });
+      break;
+
     case 'small':
       // 一打だけ、高めで短い
       taiko(ac, { at: 0, gain: 1.0 * g, from: 210, to: 72, dur: 0.3 });
@@ -406,7 +423,10 @@ function synth(ac: AudioContext, name: SfxName, g: number): void {
  * オフの人は何も登録しないので、「開いただけで何も起きない」は保たれている。
  */
 if (enabled && typeof window !== 'undefined') {
-  const prime = () => { audio(); };
+  // **音源の取得もここで始める。** 以前は audio() だけ呼んでいたので、
+  // 前回オンにしたまま再読込した人には fetch が一度も走らず、
+  // 差し替えた音源が永久に鳴らずに合成音のままだった（「音が反映されない」の正体）
+  const prime = () => { audio(); void load(); };
   window.addEventListener('pointerdown', prime, { once: true, capture: true });
   window.addEventListener('keydown', prime, { once: true, capture: true });
 }

@@ -283,7 +283,7 @@ input::placeholder { color: #6d6143; }
   height: 4px;
   background: var(--gold);
   width: 0;
-  animation: tick var(--dur, 3200ms) linear both;
+  animation: tick var(--dur, 5200ms) linear both;
 }
 @keyframes tick { to { width: 100%; } }
 

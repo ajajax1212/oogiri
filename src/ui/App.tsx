@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { DELAY } from '../engine/reducer';
 import { emptyFlip, type Flip } from '../engine/types';
 import { CAT_LABEL, LIMIT } from '../net/events';
 import { codeFromUrl, useRoom } from '../net/useRoom';
@@ -97,7 +98,10 @@ function useSceneSfx(v: V | null): void {
         else if (verdict === 'small') play('small');
         break;
       }
-      default: break;                      // open / stage は無音
+      // 判定が終わって板へ戻った合図。**intro からの open では鳴らさない**
+      // （直前に strike が鳴っているので重なる）
+      case 'open': if (was.phase === 'result') play('resume'); break;
+      default: break;                      // stage は無音
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [v?.roomPhase, v?.topicPhase, v?.topicId, v?.answer?.tally?.verdict]);
@@ -150,10 +154,14 @@ function TopicPlate({ text, deadline, out }: { text: string; deadline: number | 
   // 残り時間の線の長さ。サーバーが持っている締切から「今からの残り」を1度だけ出す。
   // クライアント側で時間を進めない（setInterval を持たない）ので、
   // ここで測るのは描画開始の瞬間だけ。以降は CSS のアニメが尺を持つ。
-  // 端末の時計がずれていると桁違いの値になるため、あり得ない値は既定へ落とす
+  //
+  // **この引き算は端末の時計を信じている。** 時計がサーバーより遅れていると
+  // 残りが実際より長く出て、線が途中のまま画面が切り替わる。お題の尺そのもの
+  // （DELAY.intro）を超えることは原理的に無いので、そこで頭を押さえる。
+  // こうしておくと、ずれても線は「早く終わって満ちたまま待つ」側にしか転ばない
   const [dur] = useState(() => {
-    const left = (deadline ?? 0) - Date.now();
-    return left > 300 && left < 8000 ? Math.round(left) : 3200;
+    const left = deadline === null ? DELAY.intro : deadline - Date.now();
+    return Math.round(Math.max(0, Math.min(DELAY.intro, left)));
   });
 
   const vars: Vars = { '--n': widestOf(lines), '--l': lines.length, '--dur': `${dur}ms` };
