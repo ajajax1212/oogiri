@@ -228,21 +228,42 @@ function Enter({ r }: { r: R }) {
     <div className="app">
       <div className="title">
         <span className="plaque">大喜利</span>
-        <p>お題は自動で出ます。フリップに書いて、名乗り出てください。</p>
+        <p>
+          {joining
+            ? '呼ばれた部屋です。名前を入れて入ってください。'
+            : 'お題は自動で出ます。フリップに書いて、名乗り出てください。'}
+        </p>
       </div>
       <div className="card col" style={{ maxWidth: 460, margin: '0 auto' }}>
+        {/* 招待URLから来た人には行き先を見せる。どの部屋に入るのか分からないまま押させない */}
+        {joining && (
+          <p className="invited">
+            部屋 <strong>{code}</strong> に招待されています
+          </p>
+        )}
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder={`名前（${LIMIT.name}文字まで）`} />
         {!joining && (
           <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="部屋コード（入るとき）" />
         )}
-        <div className="row">
-          <button className="gold" onClick={() => r.enter('create', name)} disabled={!name.trim()}>
-            部屋を作る
-          </button>
-          <button onClick={() => r.enter('join', name, code)} disabled={!name.trim() || !code.trim()}>
+        {/* 招待から来た人に「部屋を作る」は要らない。押されると誰も居ない部屋ができるだけ */}
+        {joining ? (
+          <button
+            className="gold big"
+            onClick={() => r.enter('join', name, code)}
+            disabled={!name.trim()}
+          >
             部屋に入る
           </button>
-        </div>
+        ) : (
+          <div className="row">
+            <button className="gold" onClick={() => r.enter('create', name)} disabled={!name.trim()}>
+              部屋を作る
+            </button>
+            <button onClick={() => r.enter('join', name, code)} disabled={!name.trim() || !code.trim()}>
+              部屋に入る
+            </button>
+          </div>
+        )}
         <p className="err">{r.error}</p>
         {!r.connected && <p className="muted">サーバーに接続しています…</p>}
       </div>

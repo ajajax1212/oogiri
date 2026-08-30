@@ -619,3 +619,27 @@ details > summary:hover { color: var(--gold-hi); }
   .tools input { flex: 1; min-width: 120px; }
   .act button { width: 100%; padding: 15px 10px; }
 }
+
+/* --- 招待URLから来たとき --- */
+
+/* どの部屋に入るのかを先に見せる。押してから知るのでは遅い */
+.invited {
+  margin: 0;
+  text-align: center;
+  color: var(--dim);
+  font-size: 14px;
+  letter-spacing: .06em;
+}
+.invited strong {
+  color: var(--yellow);
+  font-size: 22px;
+  letter-spacing: .22em;
+  margin: 0 .2em;
+}
+/* 押すものが1つしかない画面では、迷わせないように大きく出す */
+button.big {
+  padding: 16px 20px;
+  font-size: 19px;
+  letter-spacing: .12em;
+  width: 100%;
+}

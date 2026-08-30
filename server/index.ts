@@ -19,8 +19,30 @@ const io = new Server(httpServer);
 // ページは1枚だけ。/ も /g/<code> も同じ SPA を返し、クライアントが URL から
 // 部屋コードを読む。部屋の URL がそのまま招待状になる
 const dist = path.join(__dirname, '..', 'dist');
-app.use(express.static(dist));
-app.get(['/', '/g/:code'], (_req, res) => res.sendFile(path.join(dist, 'index.html')));
+
+/**
+ * キャッシュの効かせ方を3つに分ける。
+ *
+ * `assets/` はファイル名にハッシュが入るので、中身が変われば URL も変わる。永久に持たせてよい。
+ * **`index.html` と `sfx/` は URL が変わらないのに中身が変わる。**
+ * 素のままだとブラウザが古いものを使い続け、デプロイしても直らない
+ * （実際に「音を差し替えたのに本番で古い音が鳴る」で踏んだ）。
+ * `no-cache` は「使うな」ではなく「毎回サーバーに聞け」なので、
+ * 変わっていなければ 304 で終わる。音源が大きくても通信は増えない。
+ */
+app.use(express.static(dist, {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-store');
+    else if (/[/\\]assets[/\\]/.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else res.setHeader('Cache-Control', 'no-cache');
+  },
+}));
+
+app.get(['/', '/g/:code'], (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.sendFile(path.join(dist, 'index.html'));
+});
 
 type SocketData = { code?: string; playerId?: string };
 const sd = (s: Socket) => s.data as SocketData;
