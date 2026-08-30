@@ -9,8 +9,8 @@ import { FONT_LABEL, StrokeLayer, boxStyle } from './Flip';
 /**
  * フリップを書く（SPEC.md §4.2）。手書きと文字は1枚に混在できる。
  *
- * 文字は**パワポのようなテキストボックス**にしてある。板を押せば箱ができ、
- * その場で打てて、掴んで動かし、角で幅を変え、大きさと書体を選べる。
+ * 文字は**パワポのようなテキストボックス**にしてある。フリップをクリックすれば箱ができ、
+ * その場で打てて、掴んで動かし、左右の印で幅を変え、大きさと書体を選べる。
  * 「小・中・大」の3段だったころは、囁きと絶叫を書き分けられなかった。
  * **声色を文字で出せることが、フリップ大喜利の表現の幅そのもの**なので、
  * 大きさは連続値、書体は系統の違うものを並べてある。
@@ -61,7 +61,13 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
   }, []);
 
   useEffect(() => {
-    if (editing !== null) area.current?.focus();
+    if (editing === null) return;
+    const a = area.current;
+    if (!a) return;
+    a.focus();
+    // 書き直しのとき、キャレットは末尾に置く。先頭のままだと
+    // 打ち足したつもりの文字が頭に入る
+    a.setSelectionRange(a.value.length, a.value.length);
   }, [editing]);
 
   const patch = (i: number, p: Partial<TextItem>) =>
@@ -91,6 +97,29 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
     setEditing(i);
     onActivity?.(true);
   };
+
+  /**
+   * 押しても焦点を動かさせない。既定のままだと、押した瞬間にブラウザが焦点を
+   * 板（＝body）へ移すので、こちらが textarea に当てた焦点が直後に外れ、
+   * onBlur の dropEmpty が出来たての箱を捨ててしまう（箱が一瞬で消えた原因）。
+   *
+   * **pointerdown ではなく mousedown で止める。** pointerdown を止めると
+   * Chrome は click も dblclick も発行しなくなり、書き直しのダブルクリックが
+   * 死ぬ。焦点移動と文字選択は mousedown の既定動作なので、こちらで足りる。
+   * textarea の中だけは通す。止めるとキャレットを置けなくなる
+   */
+  const keepFocus = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).tagName === 'TEXTAREA') return;
+    e.preventDefault();
+  };
+
+  /**
+   * 書き直しのダブルクリック。受け口は**板**に置く。箱側に付けても、
+   * pointerdown で板がポインタを捕まえた時点で dblclick の宛先が板へ移るので、
+   * 箱の onDoubleClick は一度も呼ばれない（実際ずっと効いていなかった）。
+   * どの箱かは、直前の pointerdown が選んだ sel で分かる
+   */
+  const reopen = () => { if (sel !== null && !disabled) setEditing(sel); };
 
   const move = (e: React.PointerEvent) => {
     if (disabled) return;
@@ -248,12 +277,22 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
         >
           全消
         </button>
+
+        {/* 説明は道具箱の中に置く。フリップの下に出していたころは板の影が
+            背景に落ちて、文字にグラデーションが掛かって見えた（styles.css の .tools .hint） */}
+        <p className="hint">
+          {tool === 'text'
+            ? 'フリップをクリックすると文字の箱ができます。掴んで移動、左右の金の印で幅、書き直しはダブルクリック。'
+            : 'フリップの上をドラッグすると線が引けます。'}
+        </p>
       </div>
 
       <div
         ref={wrap}
         className="board edit"
         style={{ cursor: disabled ? 'default' : tool === 'pen' ? 'crosshair' : 'text', opacity: disabled ? .7 : 1 }}
+        onMouseDown={keepFocus}
+        onDoubleClick={reopen}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
@@ -270,7 +309,6 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
             data-sel={sel === i ? 1 : 0}
             style={boxStyle(t)}
             onPointerDown={editing === i ? undefined : grabBox(i)}
-            onDoubleClick={(e) => { e.stopPropagation(); setEditing(i); }}
           >
             {editing === i ? (
               <textarea
@@ -294,11 +332,6 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
         ))}
       </div>
 
-      <p className="hint">
-        {tool === 'text'
-          ? '板を押すと文字の箱ができます。掴んで移動、両端の印で幅、書体と大きさは上で。書き直しはダブルクリック。'
-          : 'マウスでそのまま描けます。'}
-      </p>
     </div>
   );
 }

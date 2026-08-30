@@ -425,7 +425,10 @@ input::placeholder { color: #6d6143; }
   flex-wrap: wrap;
   margin-bottom: 10px;
   padding: 10px 12px;
-  background: rgba(0, 0, 0, .5);
+  /* 半透明にすると body の放射グラデーション（上中央の金の光）が透けて、
+     道具箱の中でも中央だけが明るくなる。中の説明文がグラデーション越しに
+     見えたのはこれが原因だったので、ここは不透明で塗る */
+  background: #14130f;
   border: 1px solid var(--line);
   border-radius: 3px;
 }
@@ -443,7 +446,20 @@ input::placeholder { color: #6d6143; }
 }
 .tools .draft { flex: 1 1 200px; min-width: 160px; max-width: 340px; }
 .w[data-on='1'] { border-color: var(--yellow); color: var(--yellow); background: #2b2712; }
-.hint { color: var(--dim); font-size: 12px; margin: 8px 0 0; letter-spacing: .04em; }
+/* 説明は道具箱の中の2行目に置く（flex を折り返して丸ごと1行使う）。
+   板の下に置いていたころは、板の影（46px のぼかし）と body のグラデーションが
+   重なって背景が不均一になり、文字にグラデーションが掛かって見えた。
+   不透明な道具箱の中なら、端から端まで同じ濃さで読める */
+.tools .hint {
+  flex: 1 0 100%;
+  margin: 2px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--dim);
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: .04em;
+}
 
 /* --- 回答する / 公開する --- */
 
