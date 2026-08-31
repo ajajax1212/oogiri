@@ -22,9 +22,9 @@ const KEY = 'oogiri.sfx';
 export type SfxName =
   /** 新しいお題の全画面。一撃。ここが一番の見せ場 */
   | 'strike'
-  /** 「〇〇さんが回答します」。宣言の一打 */
+  /** 「〇〇さんが回答します」。誰かが回答権を取ったことを全員に知らせる */
   | 'declare'
-  /** フリップが掲げられる。持ち上がって着地する音 */
+  /** フリップが掲げられる。お題発表と同じ音を少しだけ下げて使う */
   | 'lift'
   /** 採点ボタン。軽いタップ */
   | 'tap'
@@ -65,16 +65,18 @@ const SFX: Record<SfxName, SfxSpec> = {
   // 一番大きい音。これを基準に他を決めた
   strike: { stack: 1.2, peak: 0.30, dur: 1.30 },
   declare: { stack: 1.0, peak: 0.20, dur: 0.70 },
-  lift: { stack: 1.0, peak: 0.16, dur: 0.50 },
+  lift: { stack: 1.0, peak: 0.22, dur: 1.73 },
   // 連打されるボタンなので、他より一桁近く小さく
   tap: { stack: 1.0, peak: 0.07, dur: 0.09 },
   // 小 → 中 → 大 は「打数・低さ・音量」の3つを同時に増やす。
   // 音量だけで差を付けると、音量を絞って聞いている人に差が伝わらない
-  small: { stack: 1.0, peak: 0.13, dur: 0.35 },
-  medium: { stack: 1.0, peak: 0.18, dur: 0.62 },
-  big: { stack: 1.0, peak: 0.24, dur: 0.95 },
+  // 4つとも実測から入れ直したうえで、さらに体感 -30%（振幅 ×0.554）。
+  // 判定は1問に1度必ず鳴り、しかも笑い声なので、他の音と同じ大きさだと疲れる
+  small: { stack: 1.0, peak: 0.072, dur: 0.35 },
+  medium: { stack: 1.0, peak: 0.100, dur: 0.62 },
+  big: { stack: 1.0, peak: 0.133, dur: 0.95 },
   // 別格。大きさより「構成」で格を出す（ロール → 大一撃 → 金の4音）
-  perfect: { stack: 1.0, peak: 0.32, dur: 2.10 },
+  perfect: { stack: 1.0, peak: 0.177, dur: 2.10 },
   tally: { stack: 1.0, peak: 0.14, dur: 1.20 },
   // 戻ってきた合図。次の一手を促すだけなので、判定より小さく短く
   resume: { stack: 1.0, peak: 0.11, dur: 0.45 },
@@ -93,18 +95,21 @@ const SFX: Record<SfxName, SfxSpec> = {
  * 測り直すときは decodeAudioData して全チャンネルの平均の絶対値の最大を取る。
  */
 const FILES: Partial<Record<SfxName, { url: string; gain: number }>> = {
-  strike: { url: '/sfx/strike.mp3', gain: 0.9 },   // 実測 0.28
-  // 本人が用意した「和太鼓でドン」。宣言の一打がこれまで合成音だけだった
-  declare: { url: '/sfx/declare.mp3', gain: 0.6 }, // 実測 0.33
-  lift: { url: '/sfx/lift.mp3', gain: 0.9 },       // 実測 0.44
-  tally: { url: '/sfx/tally.mp3', gain: 0.5 },     // 実測 0.43
-  // 判定の4つだけ素材が飛び抜けて大きい（実測 0.76〜0.95。他は 0.28〜0.44）。
-  // 目分量で半分にしてもまだ他より大きかったので、上の式どおりに入れ直した。
+  strike: { url: '/sfx/strike.mp3', gain: 0.90 },   // お題発表.mp3（実測 0.28）
+  // 「回答するボタン.mp3」。回答権を取ったことを全員に知らせる合図なので、
+  // 押した本人だけでなく全画面で鳴る（declared への切り替わりで1回）
+  declare: { url: '/sfx/declare.mp3', gain: 0.63 }, // 回答するボタン.mp3（実測 0.32）
+  // **公開はお題発表と同じ音**（中身は同じ mp3 を置いてある）。
+  // まったく同じ大きさだと2つの場面が混ざるので、こちらだけ少し下げる
+  lift: { url: '/sfx/lift.mp3', gain: 0.78 },       // お題発表.mp3（実測 0.28）
+  tally: { url: '/sfx/tally.mp3', gain: 0.50 },     // 集計中.mp3（実測 0.43）
+  // 判定の4つだけ素材が飛び抜けて大きい（実測 0.76〜0.95。他は 0.28〜0.43）。
+  // 実測から入れ直したうえで、さらに体感 -30% 落としてある。
   // 中が大より大きいという逆転もここで直る（素材は medium がいちばん大きい）
-  small: { url: '/sfx/small.wav', gain: 0.17 },    // 実測 0.76
-  medium: { url: '/sfx/medium.wav', gain: 0.20 },  // 実測 0.89
-  big: { url: '/sfx/big.wav', gain: 0.31 },        // 実測 0.77
-  perfect: { url: '/sfx/perfect.wav', gain: 0.34 },// 実測 0.95
+  small: { url: '/sfx/small.wav', gain: 0.094 },    // 小笑い.wav（実測 0.76）
+  medium: { url: '/sfx/medium.wav', gain: 0.111 },  // 中笑い.wav（実測 0.89）
+  big: { url: '/sfx/big.wav', gain: 0.172 },        // 大笑い.wav（実測 0.77）
+  perfect: { url: '/sfx/perfect.wav', gain: 0.188 },// 満点大笑い.wav（実測 0.95）
 };
 
 const buffers = new Map<SfxName, AudioBuffer>();

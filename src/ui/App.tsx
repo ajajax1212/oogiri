@@ -357,7 +357,7 @@ function Lobby({ r, v }: { r: R; v: V }) {
         <div className="hr" />
 
         <div>
-          <div className="sec">お題を出す</div>
+          <div className="sec">オリジナルのお題を追加する</div>
           <div style={{ marginTop: 10 }}>
             <TopicForm myTopics={v.myTopics} count={v.handmadeCount} post={r.postTopic} remove={r.removeTopic} />
           </div>
@@ -497,7 +497,7 @@ function Game({ r, v, flip, setFlip }: { r: R; v: V; flip: Flip; setFlip: (f: Fl
       )}
 
       <details style={{ marginTop: 18 }}>
-        <summary>お題を出す（{v.handmadeCount}問たまっています）</summary>
+        <summary>オリジナルのお題を追加する（{v.handmadeCount}問たまっています）</summary>
         <div className="card" style={{ marginTop: 12 }}>
           <TopicForm myTopics={v.myTopics} count={v.handmadeCount} post={r.postTopic} remove={r.removeTopic} />
         </div>
