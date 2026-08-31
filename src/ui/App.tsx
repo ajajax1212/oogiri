@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { DELAY } from '../engine/reducer';
-import { emptyFlip, type Flip } from '../engine/types';
+import { emptyFlip, type Flip, type TopicPhase, type Verdict } from '../engine/types';
 import { CAT_LABEL, LIMIT } from '../net/events';
 import { codeFromUrl, useRoom } from '../net/useRoom';
 import { FlipEditor } from './FlipEditor';
 import { FlipView } from './Flip';
 import { TopicForm } from './TopicForm';
 import { splitTopic, widestOf } from './topicLines';
+import { closingPlan, isRush, prefersReduced, RUNGS, seedOf, stepAt, type ClosingPlan } from './closing';
 import { play, sfxEnabled, setSfxEnabled, subscribeSfx } from './sound';
 import './styles.css';
 
@@ -87,24 +88,20 @@ function useSceneSfx(v: V | null): void {
       case 'intro': play('strike'); break;
       case 'declared': play('declare'); break;
       case 'reveal': play('lift'); break;
-      // 最後に押した人はタップ音を鳴らさないので、ここを黙らせると1.2秒の無音になる
+      // 最後に押した人はタップ音を鳴らさないので、ここを黙らせると1.2秒の無音になる。
+      // 枠が動き出す合図も兼ねているので、ここは今まで通り即座に鳴らす
       case 'tally': play('tally'); break;
-      case 'result': {
-        const verdict = v.answer?.tally?.verdict;
-        // 'none'（採点者が居なかった）は鳴らさない。知らせる出来事が無い
-        if (verdict === 'perfect') play('perfect');
-        else if (verdict === 'big') play('big');
-        else if (verdict === 'medium') play('medium');
-        else if (verdict === 'small') play('small');
-        break;
-      }
+      // **判定の音（small/medium/big/perfect）はここでは鳴らさない。**
+      // 枠が閉じ切る前に大笑いの声が出るとネタバレになるので、溜めと同じだけ
+      // 遅らせて Closing が鳴らす。画と音が別々に時刻を計算しないよう、
+      // 溜めの長さは closing.ts の closingPlan だけが決める
       // 判定が終わって板へ戻った合図。**intro からの open では鳴らさない**
       // （直前に strike が鳴っているので重なる）
       case 'open': if (was.phase === 'result') play('resume'); break;
       default: break;                      // stage は無音
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [v?.roomPhase, v?.topicPhase, v?.topicId, v?.answer?.tally?.verdict]);
+  }, [v?.roomPhase, v?.topicPhase, v?.topicId]);
 }
 
 /**
@@ -395,6 +392,9 @@ function Game({ r, v, flip, setFlip }: { r: R; v: V; flip: Flip; setFlip: (f: Fl
   // 次の場面が画面の外から始まり「何も出ていない」ように見える（実際に見た）
   useEffect(() => { window.scrollTo({ top: 0 }); }, [v.topicPhase, v.topicId]);
 
+  const clock = useRevealClock(v);
+  const answerKey = `${v.topicId ?? '-'}|${v.answer?.playerId ?? '-'}`;
+
   return (
     <div className="app">
       {v.topicPhase === 'intro' ? (
@@ -464,22 +464,18 @@ function Game({ r, v, flip, setFlip }: { r: R; v: V; flip: Flip; setFlip: (f: Fl
             </>
           )}
 
-          {v.topicPhase === 'tally' && (
-            <div className="tally">
-              <div>
-                <b>集計中</b>
-                <div className="dots"><i /><i /><i /></div>
-              </div>
-            </div>
-          )}
-
-          {v.topicPhase === 'result' && v.answer && (
-            /* 判定のときだけフリップを一回り小さくする。
-               背の低いウィンドウで、板と判定が同時に画面へ入らないため */
-            <div className="resulted">
-              {v.answer.flip && <FlipView flip={v.answer.flip} />}
-              <Verdict a={v.answer} />
-            </div>
+          {/* 集計と判定は1つの画面。**フリップを消して出し直さない。**
+              tally で「集計中…」の全画面を挟むと、公開で起こした板が一度消える。
+              key を回答ごとに切るのは、2人目の回答で必ず頭から流し直すため */}
+          {(v.topicPhase === 'tally' || v.topicPhase === 'result') && v.answer && (
+            <Closing
+              key={answerKey}
+              a={v.answer}
+              topicId={v.topicId}
+              phase={v.topicPhase}
+              deadline={v.deadline}
+              clock={clock}
+            />
           )}
         </>
       )}
@@ -559,16 +555,185 @@ function Reveal({ flip, name }: { flip: Flip; name: string }) {
   );
 }
 
+/* ------------------------------------------------------------------ 決着 */
+
+/**
+ * `reveal` に入った時刻を憶えておく箱。
+ *
+ * **サーバーは経過時間を配らない**ので、「採点が速かったか」はここでしか測れない。
+ * state ではなく ref に置くのは、この値が変わっても描き直す必要が無いから。
+ *
+ * 読むのは Closing が mount した瞬間。**子の effect は親の effect より先に走る**ので、
+ * Closing が mount する commit ではまだ1つ前の commit の値（phase は 'reveal'）が
+ * 入っている。これがそのまま「reveal から続けて来たか」の判定になる。
+ */
+type RevealClock = { phase: TopicPhase | null; key: string; revealAt: number | null };
+
+function useRevealClock(v: V): RefObject<RevealClock> {
+  const clock = useRef<RevealClock>({ phase: null, key: '', revealAt: null });
+  const key = `${v.topicId ?? '-'}|${v.answer?.playerId ?? '-'}`;
+
+  useEffect(() => {
+    const c = clock.current;
+    // 回答が変わったら測り直す。前の回答の時刻を持ち越すと、
+    // 2人目の公開がいきなり「速い」と誤判定される
+    if (c.key !== key) { c.key = key; c.revealAt = null; }
+    if (v.topicPhase === 'reveal' && c.phase !== 'reveal') c.revealAt = Date.now();
+    c.phase = v.topicPhase;
+  }, [v.topicPhase, key]);
+
+  return clock;
+}
+
+const SIDES = ['t', 'r', 'b', 'l'] as const;
+type Side = (typeof SIDES)[number];
+
+/** 段 → 枠が食い込む割合。12段で 50%（＝板の中央）に届いて閉じ切る */
+const cover = (step: number) => (step / RUNGS) * 50;
+
+/**
+ * 覆う側だけを見せる。
+ *
+ * **バーは板と同じ大きさで固定しておき、clip-path で見える範囲だけ広げる。**
+ * バーそのものを伸ばすと、中に敷いた段の模様まで一緒に伸び縮みして、
+ * 段が段に見えない（切れ目が動く）。clip-path なら模様は動かない。
+ */
+function barStyle(s: Side, step: number): CSSProperties {
+  // 角は 45度ではなく「4辺が同じ割合で迫った先」で継ぐ。額縁と同じ留め継ぎになり、
+  // 深く入っても縞の向きが角でぶつからない。矩形で重ねると、角が
+  // 縦縞と横縞の市松になって「枠」に見えなくなる（実際にそうなった）
+  const c = cover(step);
+  const a = `${c}%`;
+  const z = `${100 - c}%`;
+  if (s === 't') return { clipPath: `polygon(0 0, 100% 0, ${z} ${a}, ${a} ${a})` };
+  if (s === 'b') return { clipPath: `polygon(0 100%, ${a} ${z}, ${z} ${z}, 100% 100%)` };
+  if (s === 'l') return { clipPath: `polygon(0 0, ${a} ${a}, ${a} ${z}, 0 100%)` };
+  return { clipPath: `polygon(100% 0, 100% 100%, ${z} ${z}, ${z} ${a})` };
+}
+
+/** 最前列の光。まだ空いている窓の縁を1周する */
+function edgeStyle(s: Side, step: number): CSSProperties {
+  const a = `${cover(step)}%`;
+  if (s === 't') return { top: a, left: a, right: a };
+  if (s === 'b') return { bottom: a, left: a, right: a };
+  if (s === 'l') return { left: a, top: a, bottom: a };
+  return { right: a, top: a, bottom: a };
+}
+
+/** 判定の音。'none'（採点者が居なかった）は鳴らさない。知らせる出来事が無い */
+function playVerdict(verdict: Verdict): void {
+  if (verdict === 'perfect') play('perfect');
+  else if (verdict === 'big') play('big');
+  else if (verdict === 'medium') play('medium');
+  else if (verdict === 'small') play('small');
+}
+
+/**
+ * 集計から判定までを一続きに見せる（SPEC.md §6・§10.2）。
+ *
+ * フリップは公開のときのまま置き、**上に重ねた金の枠だけが段階的に迫る**。
+ * 板は container-type: inline-size で中の文字が cqw で効くので、板の幅を
+ * 動かすと文字まで動く。だから板には一切触らない。
+ *
+ * 尺と段数は closing.ts の closingPlan が1つだけ決める。画も音も同じ計画を読む。
+ */
+function Closing({ a, topicId, phase, deadline, clock }: {
+  a: NonNullable<V['answer']>;
+  topicId: string | null;
+  phase: 'tally' | 'result';
+  deadline: number | null;
+  clock: RefObject<RevealClock>;
+}) {
+  const verdict: Verdict = a.tally?.verdict ?? 'none';
+
+  // mount した1回だけ決める。誰かの writing が変わって再描画されても作り直さない
+  const [run] = useState<{ plan: ClosingPlan; elapsed: number; armed: boolean }>(() => {
+    const c = clock.current;
+    // reveal からそのまま繋がったときだけ音を鳴らす。**リロードや再接続で
+    // 状態を受け直しただけで鳴ってはいけない**（SPEC.md §10.3）
+    const armed = phase === 'tally' && c.phase === 'reveal';
+
+    // 途中から入った人のために、枠がどこまで来ているはずかを deadline から出す。
+    // **この引き算は端末の時計を信じている**ので、必ず DELAY で頭を押さえる
+    // （CLAUDE.md）。押さえないと、時計のずれた端末で枠が最初から出直す
+    const span = phase === 'tally' ? DELAY.tally : DELAY.result;
+    const base = phase === 'tally' ? 0 : DELAY.tally;
+    const left = deadline === null ? span : deadline - Date.now();
+    const elapsed = base + Math.max(0, Math.min(span, span - left));
+
+    return {
+      plan: closingPlan({
+        verdict,
+        // 同じ回答なら誰の画面でも同じ間で止まる（closing.ts の seedOf）
+        seed: seedOf(a.playerId, topicId, verdict),
+        rush: isRush(c.revealAt === null ? null : Date.now() - c.revealAt, a.judges),
+        reduced: prefersReduced(),
+      }),
+      elapsed,
+      armed,
+    };
+  });
+
+  const { plan, elapsed, armed } = run;
+  const [step, setStep] = useState(() => stepAt(plan, elapsed));
+  const [shown, setShown] = useState(() => elapsed >= plan.verdictAt);
+
+  useEffect(() => {
+    const timers: number[] = [];
+    plan.at.forEach((ms, i) => {
+      if (ms <= elapsed) return;          // もう過ぎている段にはタイマーを張らない
+      timers.push(window.setTimeout(() => setStep(i + 1), ms - elapsed));
+    });
+    if (plan.verdictAt > elapsed) {
+      timers.push(window.setTimeout(() => {
+        setShown(true);
+        if (armed) playVerdict(verdict);
+      }, plan.verdictAt - elapsed));
+    }
+    // **張ったタイマーは必ず片付ける。** 残すと、次の回答へ進んだ後に
+    // 前の回答の判定の音が遅れて鳴る（同じ音が二重に鳴る）
+    return () => { for (const t of timers) window.clearTimeout(t); };
+  }, [plan, elapsed, armed, verdict]);
+
+  return (
+    <div className="closing" data-step={step} data-odd={step % 2} data-full={step >= RUNGS ? 1 : 0}>
+      <div className="stage">
+        {a.flip && <FlipView flip={a.flip} />}
+        {/* 枠は板の外周に重ねる層だけで作る。板の中身（線と文字）は触らない */}
+        <div className="frame" aria-hidden="true">
+          {SIDES.map((s) => <i key={s} className={`bar ${s}`} style={barStyle(s, step)} />)}
+          {SIDES.map((s) => <i key={`e${s}`} className={`edge ${s}`} style={edgeStyle(s, step)} />)}
+          {/* 段が上がった瞬間の当たり。key を段に取ってあるので、段が変わるたびに
+              要素ごと作り直されてアニメが頭から流れ直す（CSS には
+              「属性が変わったら流し直す」が無い） */}
+          {step > 0 && <i className="hit" key={step} />}
+        </div>
+      </div>
+      <p className="by"><span>{a.playerName}</span> さんの回答</p>
+      {shown && <Verdict a={a} />}
+    </div>
+  );
+}
+
+/**
+ * 判定。**画面の中央**に出す（枠が止まってから）。
+ *
+ * 板の白と枠の金の上に重なるので、暗い盤を1枚敷いて金の文字を置く。
+ * 満点大笑いだけは今まで通り別格の全画面（.verdict.perfect）。
+ */
 function Verdict({ a }: { a: NonNullable<V['answer']> }) {
   const t = a.tally;
   if (!t) return null;
   const label = { small: '小笑い', medium: '中笑い', big: '大笑い', perfect: '満点大笑い', none: '判定なし' }[t.verdict];
+  const perfect = t.verdict === 'perfect';
   return (
-    <div className={`verdict${t.verdict === 'perfect' ? ' perfect' : ''}`}>
-      <b>{label}</b>
-      {t.judges > 0 && (
-        <p className="counts">小 {t.counts[1]}　中 {t.counts[2]}　大 {t.counts[3]}</p>
-      )}
+    <div className={`vstage${perfect ? ' perfect' : ''}`} aria-live="polite">
+      <div className={`verdict${perfect ? ' perfect' : ''}`}>
+        <b>{label}</b>
+        {t.judges > 0 && (
+          <p className="counts">小 {t.counts[1]}　中 {t.counts[2]}　大 {t.counts[3]}</p>
+        )}
+      </div>
     </div>
   );
 }

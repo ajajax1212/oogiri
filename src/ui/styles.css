@@ -294,7 +294,7 @@ input::placeholder { color: #6d6143; }
 }
 @keyframes wipe { to { transform: translateY(-102%); } }
 
-/* --- declared / tally（間を取るだけの画面）--- */
+/* --- declared（間を取るだけの画面）--- */
 
 .declare {
   min-height: 62vh;
@@ -324,21 +324,6 @@ input::placeholder { color: #6d6143; }
 }
 /* 名前の左右に金の線を引いて、暗転の中で高さを作る */
 .declare .rule { width: min(420px, 70vw); height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin: 26px auto 0; }
-
-.tally { min-height: 40vh; display: grid; place-items: center; }
-.tally b {
-  font-family: var(--fat);
-  font-weight: 900;
-  font-size: clamp(26px, 4vw, 40px);
-  letter-spacing: .5em;
-  text-indent: .5em;
-  color: var(--gold-hi);
-}
-.tally .dots { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
-.tally .dots i { width: 10px; height: 10px; background: var(--gold); border-radius: 50%; animation: blink 1s ease-in-out infinite; }
-.tally .dots i:nth-child(2) { animation-delay: .16s; }
-.tally .dots i:nth-child(3) { animation-delay: .32s; }
-@keyframes blink { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
 
 /* --- フリップ --- */
 
@@ -575,17 +560,19 @@ input::placeholder { color: #6d6143; }
 }
 @keyframes flash { 0% { opacity: 0; } 18% { opacity: .85; } 100% { opacity: 0; } }
 
-/* 誰の回答か。板が止まってから置く */
-.reveal .by {
+/* 誰の回答か。板が止まってから置く。
+   決着（.closing）でも同じ1行を同じ位置に置く。ここを消すと、集計に移った
+   瞬間に板より下が 1 行分せり上がって、板ごと動いたように見える */
+.reveal .by, .closing .by {
   position: relative;
   margin: 14px 0 0;
   text-align: center;
   color: var(--dim);
   font-size: 13px;
   letter-spacing: .18em;
-  animation: byin .42s ease .62s both;
 }
-.reveal .by span {
+.reveal .by { animation: byin .42s ease .62s both; }
+.reveal .by span, .closing .by span {
   font-family: var(--fat);
   font-weight: 900;
   font-size: 17px;
@@ -626,15 +613,148 @@ input::placeholder { color: #6d6143; }
 .done { text-align: center; margin-top: 18px; color: var(--dim); letter-spacing: .1em; }
 .done b { color: var(--yellow); font-family: var(--fat); }
 
+/* --- 決着（集計 → 判定）--- */
+
+/* **フリップを消して出し直さない。** 公開で起こした板をそのまま置き、
+   上に重ねた金の枠だけが段階的に迫る。板の大きさは公開のときと同じにする
+   （--boardh を .reveal と揃える）。ここがずれると、集計に移った瞬間に
+   板が跳ねて「一度消えて出直した」のと同じ印象になる。
+
+   **板そのものには一切触らない。** 板は container-type: inline-size で、
+   中の文字が cqw（＝板のレイアウト幅）で効く。板の幅を動かすと文字まで
+   別の速さで動いて、書いた人の見た絵と場に出る絵がずれる。
+   .board にも同じ値を書いてあるのは、狭い画面の @media が .board へ直接
+   --boardh を入れており、継承より詳細度で勝ってしまうため */
+.closing, .closing .board { --boardh: min(44vh, calc(100vh - 372px)); }
+
+/* 枠を重ねるための土台。板と1ピクセルも違わない箱にしたいので、
+   板と同じ式（幅の上限と 16:10）をそのまま持たせる */
+.closing .stage {
+  position: relative;
+  width: min(100%, calc(var(--boardh) * 1.6));
+  margin: 0 auto;
+  aspect-ratio: 16 / 10;
+}
+
+.closing .frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* 枠の1辺。**要素は常に板の全面**に置いてあり、clip-path で見えている
+   範囲だけを広げる。要素そのものを伸ばすと中の段の模様まで伸び縮みして、
+   段の切れ目が動いてしまう（12段が12段に見えない）。
+
+   ガコンと止めたいので、尺は 0.13 秒と短く、終わりに軽く行き過ぎる曲線を当てる。
+   等速で滑らせると「あと何段来るのか」の緊張が出ない */
+.closing .bar {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  transition: clip-path 130ms cubic-bezier(.16, 1.55, .3, 1);
+}
+/* 段の高さは「板の半分 ÷ 12」＝ 全面の 1/24。上下は高さ、左右は幅で割る */
+.closing .bar.t, .closing .bar.b { background-size: 100% calc(100% / 24); }
+.closing .bar.l, .closing .bar.r { background-size: calc(100% / 24) 100%; }
+/* 1段ごとに暗→金→明→暗。外側が暗く内側が明るいので、段が積み上がって見える */
+.closing .bar.t { background-image: linear-gradient(180deg, #201703 0%, #6b5310 8%, #c9a227 36%, #f6e27a 64%, #d3ad30 88%, #171101 100%); }
+.closing .bar.b { background-image: linear-gradient(0deg,   #201703 0%, #6b5310 8%, #c9a227 36%, #f6e27a 64%, #d3ad30 88%, #171101 100%); }
+.closing .bar.l { background-image: linear-gradient(90deg,  #201703 0%, #6b5310 8%, #c9a227 36%, #f6e27a 64%, #d3ad30 88%, #171101 100%); }
+.closing .bar.r { background-image: linear-gradient(270deg, #201703 0%, #6b5310 8%, #c9a227 36%, #f6e27a 64%, #d3ad30 88%, #171101 100%); }
+
+/* 最前列の光。枠の内側の縁に貼り付いて動く。
+   どこまで来たかを1本の線で読ませる役なので、枠の色より必ず明るくする */
+.closing .edge {
+  position: absolute;
+  pointer-events: none;
+  box-shadow: 0 0 16px rgba(255, 225, 0, .8);
+  transition: top 130ms cubic-bezier(.16, 1.55, .3, 1), bottom 130ms cubic-bezier(.16, 1.55, .3, 1),
+              left 130ms cubic-bezier(.16, 1.55, .3, 1), right 130ms cubic-bezier(.16, 1.55, .3, 1);
+}
+.closing .edge.t, .closing .edge.b {
+  height: 3px;
+  background: linear-gradient(90deg, #fff6c8, #fff 50%, #fff6c8);
+}
+.closing .edge.l, .closing .edge.r {
+  width: 3px;
+  background: linear-gradient(180deg, #fff6c8, #fff 50%, #fff6c8);
+}
+.closing .edge.t { transform: translateY(-100%); }
+.closing .edge.b { transform: translateY(100%); }
+.closing .edge.l { transform: translateX(-100%); }
+.closing .edge.r { transform: translateX(100%); }
+/* 閉じ切ったら1枚の金の面にする。4辺のバーは重なったままだと縞の向きが
+   食い違って渦のように見え、「閉じ切った」ではなく「壊れた」に見える。
+   満点大笑いはこの面の上に来るので、ここが最後の一枚になる */
+.closing[data-full='1'] .frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(158deg, #5d480d 0%, #c9a227 24%, #f6e27a 48%, #d8b23f 62%, #6b5310 100%);
+  animation: seal .2s ease-out both;
+}
+@keyframes seal { from { opacity: 0; } to { opacity: 1; } }
+
+/* まだ1段も来ていないときと、閉じ切った後は光を消す。
+   閉じ切ると上下左右の線が中央で十字に交わって、金の面に傷のように残る */
+.closing[data-step='0'] .edge, .closing[data-full='1'] .edge { opacity: 0; }
+
+/* 段が上がった瞬間の当たり。内側へ一瞬だけ光がこぼれる */
+.closing .hit {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 22px 2px rgba(255, 242, 178, .68);
+  animation: hit .22s ease-out both;
+}
+@keyframes hit { from { opacity: .95; } to { opacity: 0; } }
+
+/* 段が上がるたびに枠ごと一度だけ揺らす。CSS には「属性が変わったら
+   アニメーションを流し直す」が無いので、**段の偶奇で名前を入れ替えて**
+   流し直させる（中身は同じ）。
+
+   揺らすのは板を包む箱の transform だけ。transform はレイアウト幅を
+   変えないので、板の cqw（＝文字の大きさ）には触らない */
+.closing[data-odd='1'] .stage { animation: clunkA .17s cubic-bezier(.2, .85, .3, 1) both; }
+.closing[data-odd='0'] .stage { animation: clunkB .17s cubic-bezier(.2, .85, .3, 1) both; }
+.closing[data-step='0'] .stage { animation: none; }
+@keyframes clunkA { 0% { transform: scale(1.009); } 42% { transform: scale(.9965); } 100% { transform: none; } }
+@keyframes clunkB { 0% { transform: scale(1.009); } 42% { transform: scale(.9965); } 100% { transform: none; } }
+
 /* --- 判定 --- */
 
-/* 判定は「板 + 判定」で1画面。板の取り分を減らして両方を同時に見せる */
-.resulted .board { --boardh: min(34vh, calc(100vh - 340px)); }
+/* 判定は**画面の中央**に出す。板の下に置くと、枠が閉じ切ったとき
+   （満点大笑い）に視線が板から離れてしまう。
+   pointer-events を切ってあるので、下の帯の「次のお題に行く」は最初から押せる */
+.vstage {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  pointer-events: none;
+}
+/* 中央だけを暗くする。ふつうの周辺減光と逆にしてあるのは、
+   読ませたい文字の後ろ（＝白い板と金の枠の上）を落としたいから。
+   端を残すのは、枠がどこまで来たかを判定と一緒に見せたいため */
+.vstage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, .62), rgba(0, 0, 0, .24));
+  animation: vdim .28s ease both;
+}
+.vstage.perfect::before { display: none; }
+@keyframes vdim { from { opacity: 0; } to { opacity: 1; } }
 
-/* stamp は外枠ではなく中の板に掛ける。外枠に transform を掛けると
+/* stamp は外枠ではなく中の文字に掛ける。外枠に transform を掛けると
    そこが重ね合わせの文脈になり、後光（::before / z-index:-1）が
    フリップの白の上に出てしまう */
-.verdict { text-align: center; margin-top: 24px; }
+.verdict { position: relative; text-align: center; }
 .verdict b {
   animation: stamp .42s cubic-bezier(.2, 1.4, .4, 1) both;
   display: inline-block;
@@ -644,14 +764,19 @@ input::placeholder { color: #6d6143; }
   letter-spacing: .1em;
   text-indent: .1em;
   color: var(--gold-hi);
+  padding: 10px 26px;
+}
+/* 満点以外は黒い盤に金の文字。白い板の上にも金の枠の上にも重なるので、
+   線だけの見出しでは読めない（金の枠の上で金の文字が消える） */
+.verdict:not(.perfect) b {
+  background: rgba(6, 6, 4, .93);
   border-top: 2px solid var(--gold);
   border-bottom: 2px solid var(--gold);
-  padding: 10px 26px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .9), 0 18px 48px rgba(0, 0, 0, .8);
 }
 @keyframes stamp { from { opacity: 0; transform: scale(1.5); } to { opacity: 1; transform: scale(1); } }
 
 /* 満点大笑いだけは格を変える。黄の面をもう一度出して、intro と同じ強さで殴る */
-.verdict.perfect { position: relative; margin-top: 30px; }
 .verdict.perfect b {
   background: var(--yellow);
   color: var(--ink);
@@ -678,15 +803,30 @@ input::placeholder { color: #6d6143; }
   animation: rays 24s linear infinite;
 }
 @keyframes rays { to { transform: translate(-50%, -50%) rotate(360deg); } }
+/* 内訳（小◯ 中◯ 大◯）は判定と同じ画面に残す。誰が押したかは出さない */
 .verdict .counts {
   margin-top: 14px;
-  color: var(--dim);
+  color: var(--gold-hi);
   letter-spacing: .16em;
   font-size: 14px;
+  text-shadow: 0 2px 10px #000, 0 0 3px #000;
   /* 判定より一拍おいて出す。先に「何笑いか」を読ませたい */
   animation: linein .4s ease .22s both;
 }
-.verdict.perfect .counts { color: var(--gold-hi); }
+/* 満点は閉じ切った金の面の上に出る。金の上に金では読めないので、
+   内訳だけ黒い札に載せ替える（色を黒くするだけでは金の照りに負けた） */
+.verdict.perfect .counts {
+  /* inline-block にすると判定の文字と同じ行に並んでしまう（実際に横に出た）。
+     ブロックのまま幅だけ内容に合わせて、左右の余白で中央に置く */
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  background: rgba(6, 6, 4, .88);
+  border: 1px solid var(--gold-dk);
+  border-radius: 999px;
+  padding: 5px 18px;
+  text-shadow: none;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .verdict.perfect::before { animation: none; }
@@ -698,6 +838,17 @@ input::placeholder { color: #6d6143; }
   /* 長さだけ潰すと遅延が残り、採点ボタンが 0.72 秒空白のまま出てこない。
      待たせる理由が演出しか無いので、遅延ごと畳む */
   .board.lift, .reveal .by, .reveal ~ .scores, .reveal ~ .done {
+    animation-duration: .01ms;
+    animation-delay: 0s;
+  }
+
+  /* 決着も同じ。**枠は動かさないが、止まる段は正しい位置に置く**ので
+     「どこまで来たか」＝判定は動かなくても伝わる。溜めそのものは
+     closing.ts 側で 0 に畳んであるので、判定の文字と内訳は即座に出る */
+  .closing .bar, .closing .edge { transition: none; }
+  .closing .stage { animation: none; }
+  .closing .hit { display: none; }
+  .vstage::before, .verdict b, .verdict .counts {
     animation-duration: .01ms;
     animation-delay: 0s;
   }
@@ -768,6 +919,7 @@ details > summary:hover { color: var(--gold-hi); }
   .strip { margin: -16px -14px 14px; padding: 10px 12px 12px; }
   .board { --boardh: min(38vh, calc(100vh - 280px)); }
   .reveal .board { --boardh: min(38vh, calc(100vh - 322px)); }
+  .closing, .closing .board { --boardh: min(38vh, calc(100vh - 322px)); }
   .dock { padding: 8px 12px 10px; }
   .dock .inner { flex-wrap: wrap; gap: 8px; }
   /* flex: 1 は基準幅 0 なので width では折り返せない。基準幅ごと 100% にする */
