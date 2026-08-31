@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import express from 'express';
 import { Server, type Socket } from 'socket.io';
-import { setConnected, start, toLobby, type Ctx } from '../src/engine/reducer';
+import { handoffHost, setConnected, start, toLobby, type Ctx } from '../src/engine/reducer';
 import { viewFor } from '../src/engine/view';
 import type { Score } from '../src/engine/types';
 import { checkFlip, checkTopicText, checkWord, cleanName, EV, LIMIT } from '../src/net/events';
@@ -175,13 +175,9 @@ io.on('connection', (socket) => {
       return ack?.({ ok: false, error: 'ホストのみ操作できます' });
     }
     if (room.state.players.length < 2) return ack?.({ ok: false, error: '2人以上で始めます' });
-    // 全員が1語以上入れていることを開始の条件にする（SPEC.md §9.2）
-    const missing = room.state.players.filter(
-      (p) => !room.state.brought.some((b) => b.byId === p.id),
-    );
-    if (missing.length) {
-      return ack?.({ ok: false, error: `${missing.map((p) => p.name).join('・')} が言葉をまだ入れていません` });
-    }
+    // **言葉は必須にしない**（2026-08-31 に本人が変更）。1語考えつかない人が
+    // 出るたびに全員が待たされ、そこで場が止まっていた。0語でもお題は作れる
+    // （持ち寄り語は素材に混ざるだけで、無ければ既定の素材から出る）
     const c: Ctx = ctxOf(room);
     room.state = start(room.state, c);
     schedule(room, push(room));
@@ -255,15 +251,28 @@ io.on('connection', (socket) => {
 
   socket.on(EV.leave, () => {
     const { room, me } = ctxSocket(socket);
-    if (!room || !me || room.state.roomPhase !== 'lobby') return;
+    if (!room || !me) return;
+
+    // 抜ける人が回答権を持ったまま消えると、誰も公開できず場が止まる。
+    // 先に回答権を返してから席を外す（切断と同じ扱い）
+    if (room.state.answer?.playerId === me) {
+      apply(room, { type: 'RELEASE_CLAIM' }, push(room));
+    }
+
     room.state = {
       ...room.state,
       players: room.state.players.filter((p) => p.id !== me),
       brought: room.state.brought.filter((b) => b.byId !== me),
     };
+    // **ホストが抜けても部屋は続ける。**次に座っている人へ渡す（2026-08-31）。
+    // 渡さないと「始める」を押せる人が居なくなって、全員が作り直す羽目になる
+    room.state = handoffHost(room.state, me);
     room.tokens.delete(me);
     sd(socket).code = undefined;
     sd(socket).playerId = undefined;
+
+    // 抜けたことで採点や合意の条件が満たされることがある（残り全員が押し終える）
+    apply(room, { type: 'TICK', now: Date.now() }, push(room));
     broadcast(room);
   });
 
@@ -271,6 +280,9 @@ io.on('connection', (socket) => {
     const { room, me } = ctxSocket(socket);
     if (!room || !me) return;
     room.state = setConnected(room.state, me, false);
+    // 落ちた人がホストだと「始める」が押せなくなるので、繋がっている人へ渡す。
+    // 席は残すので、戻ってきてもゲームは続けられる（ホストは戻らない）
+    room.state = handoffHost(room.state, me);
     // 誰かが抜けたことで採点や合意の条件が満たされることがあるので、TICK を1つ打つ
     apply(room, { type: 'TICK', now: Date.now() }, push(room));
     scheduleRelease(room, push(room));

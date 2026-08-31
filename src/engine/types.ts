@@ -150,6 +150,24 @@ export type GameState = {
   handmade: Handmade[];
   /** 生成の履歴。viewFor では丸ごと落とす */
   history: TopicRecord[];
+  /**
+   * 判定まで終わった回答の控え。**あとで全員で見返すため**（2026-08-31）。
+   * その場で流れていく面白さだけだと、終わったあとに何も残らない。
+   *
+   * 入れるのは判定が確定した時点。**公開済みの情報しか持たない**ので、
+   * viewFor はそのまま全員に配れる（history と違って伏せるものが無い）。
+   */
+  gallery: GalleryEntry[];
+};
+
+/** 見返し用に控えた1枚。フリップと、そのときのお題と判定 */
+export type GalleryEntry = {
+  id: string;
+  topicText: string;
+  playerId: string;
+  playerName: string;
+  flip: Flip;
+  tally: Tally;
 };
 
 // --- 行動（SPEC.md §8.2） ---

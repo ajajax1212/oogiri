@@ -12,6 +12,23 @@
     <style>
       html, body { margin: 0; background: #0d0d0c; }
     </style>
+    <!--
+      フリップの書体。**端末に入っている書体では駄目**だった。
+      書いた人の画面と、それを見る人の画面で別の書体になるので、
+      筆で書いたつもりの一言が相手には明朝で届く。**同じ絵が全員に届かないと
+      大喜利が成立しない**ので、ここだけは外から取る。
+
+      日本語なので重いが、Google Fonts は使った字だけを小分けにして配るため、
+      フリップに書く程度の字数なら実際に落ちてくるのは数十KBで済む。
+      display=swap を付けてあるので、届くまでは端末の書体で読める。
+      preconnect は、字が出るまでの往復を1つ減らすため
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&family=Shippori+Mincho:wght@700&family=Zen+Maru+Gothic:wght@700;900&family=Mochiy+Pop+One&family=Yuji+Syuku&family=Yusei+Magic&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="root"></div>

@@ -46,7 +46,7 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
   const wrap = useRef<HTMLDivElement | null>(null);
   const drawing = useRef(false);
   const drag = useRef<{ i: number; dx: number; dy: number } | null>(null);
-  const resize = useRef<{ i: number; side: -1 | 1 } | null>(null);
+  const resize = useRef<{ i: number; side: -1 | 1; corner: boolean } | null>(null);
   const area = useRef<HTMLTextAreaElement | null>(null);
 
   const texts = flip.texts;
@@ -89,10 +89,12 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
       return;
     }
 
-    // 文字の道具。何も無いところを押したら、そこに箱を作ってすぐ打てるようにする
+    // 文字の道具。**箱は押した場所ではなく、必ず板の中央に出す**（本人の指定）。
+    // 押した場所に出すと、端を押したときに箱が板からはみ出したまま生まれ、
+    // 打ち始める前に動かす手間が要る。中央なら必ず全部見えている
     if (texts.length >= LIMIT.texts) { setSel(null); setEditing(null); return; }
     const i = texts.length;
-    onChange({ ...flip, texts: [...texts, newBox(x, y, font, size)] });
+    onChange({ ...flip, texts: [...texts, newBox(FLIP_W / 2, FLIP_H / 2, font, size)] });
     setSel(i);
     setEditing(i);
     onActivity?.(true);
@@ -126,12 +128,18 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
     const [x, y] = toLogical(e);
 
     if (resize.current) {
-      const { i, side } = resize.current;
+      const { i, side, corner } = resize.current;
       const t = texts[i];
       // 掴んだ側の縁だけを動かす。反対の縁は動かない（パワポと同じ手触り）
       const edge = t.x + (side * t.w) / 2;
       const w = Math.max(120, Math.min(FLIP_W, t.w + side * (x - edge)));
-      patch(i, { w, x: t.x + (side * (w - t.w)) / 2 });
+      const x2 = t.x + (side * (w - t.w)) / 2;
+      if (!corner) { patch(i, { w, x: x2 }); return; }
+      // **角は箱と文字を一緒に拡縮する。**横の印が「折り返す幅だけ」を変えるのに対し、
+      // 角は見た目の大きさそのものを変える道具。ここで文字を据え置くと、
+      // 箱だけ広がって字が小さいまま残り、別物になる
+      const k = w / t.w;
+      patch(i, { w, x: x2, size: Math.min(TEXT_MAX, Math.max(TEXT_MIN, t.size * k)) });
       return;
     }
     if (drag.current) {
@@ -171,12 +179,12 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
     drag.current = { i, dx: x - texts[i].x, dy: y - texts[i].y };
   };
 
-  const grabEdge = (i: number, side: -1 | 1) => (e: React.PointerEvent) => {
+  const grabEdge = (i: number, side: -1 | 1, corner = false) => (e: React.PointerEvent) => {
     if (disabled) return;
     e.stopPropagation();
     wrap.current?.setPointerCapture(e.pointerId);
     setSel(i);
-    resize.current = { i, side };
+    resize.current = { i, side, corner };
   };
 
   // --- 道具箱 ---
@@ -282,7 +290,7 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
             背景に落ちて、文字にグラデーションが掛かって見えた（styles.css の .tools .hint） */}
         <p className="hint">
           {tool === 'text'
-            ? 'フリップをクリックすると文字の箱ができます。掴んで移動、左右の金の印で幅、書き直しはダブルクリック。'
+            ? 'フリップをクリックすると中央に文字の箱ができます。掴んで移動、左右の印で幅、角の印で文字ごと拡大縮小。書き直しはダブルクリック。'
             : 'フリップの上をドラッグすると線が引けます。'}
         </p>
       </div>
@@ -326,6 +334,11 @@ export function FlipEditor({ flip, onChange, disabled, onActivity }: Props) {
               <>
                 <span className="grip l" onPointerDown={grabEdge(i, -1)} />
                 <span className="grip r" onPointerDown={grabEdge(i, 1)} />
+                {/* 角。横の印は折り返す幅だけ、角は文字ごと大きさを変える */}
+                <span className="grip c tl" onPointerDown={grabEdge(i, -1, true)} />
+                <span className="grip c tr" onPointerDown={grabEdge(i, 1, true)} />
+                <span className="grip c bl" onPointerDown={grabEdge(i, -1, true)} />
+                <span className="grip c br" onPointerDown={grabEdge(i, 1, true)} />
               </>
             )}
           </div>

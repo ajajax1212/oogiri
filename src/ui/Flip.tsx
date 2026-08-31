@@ -24,26 +24,27 @@ export const STROKE_W = { 1: 7, 2: 14, 3: 26 } as const;
  * 教科書体へ、筆が無ければ明朝へ——**系統の近いものへ落とす**。
  */
 export const FONT_STACK: Record<FontKey, string> = {
-  gothic: "'Yu Gothic','YuGothic','Hiragino Kaku Gothic ProN','Meiryo',sans-serif",
-  mincho: "'Yu Mincho','YuMincho','Hiragino Mincho ProN','MS PMincho',serif",
-  round: "'UD デジタル教科書体 NK-R','UD Digi Kyokasho NK-R','Hiragino Maru Gothic ProN','Meiryo',sans-serif",
-  pop: "'HGP創英角ﾎﾟｯﾌﾟ体','HGSoeiKakupoptai','UD デジタル教科書体 NK-R','Hiragino Maru Gothic ProN',sans-serif",
-  brush: "'HGP行書体','HGGyoshotai','游教科書体','Yu Mincho','Hiragino Mincho ProN',serif",
-  mono: "'BIZ UDGothic','MS Gothic','Osaka-Mono',monospace",
+  gothic: "'Noto Sans JP','Yu Gothic','Hiragino Kaku Gothic ProN','Meiryo',sans-serif",
+  mincho: "'Shippori Mincho','Yu Mincho','Hiragino Mincho ProN','MS PMincho',serif",
+  round: "'Zen Maru Gothic','Hiragino Maru Gothic ProN','Meiryo',sans-serif",
+  pop: "'Mochiy Pop One','HGP創英角ﾎﾟｯﾌﾟ体','Hiragino Maru Gothic ProN',sans-serif",
+  brush: "'Yuji Syuku','HGP行書体','Yu Mincho','Hiragino Mincho ProN',serif",
+  mono: "'Yusei Magic','Yu Gothic','Hiragino Kaku Gothic ProN',sans-serif",
 };
 
 export const FONT_LABEL: Record<FontKey, string> = {
   gothic: 'ゴシック',
   mincho: '明朝',
-  round: '教科書',
+  round: '丸ゴ',
   pop: 'ポップ',
   brush: '筆',
-  mono: '等幅',
+  // 脱力系。手書きの気の抜けた感じで、声の小ささや投げやりさを出せる
+  mono: '脱力',
 };
 
 /** 書体ごとの太さ。ポップや筆は元が太いので、足すと潰れる */
 const FONT_WEIGHT: Record<FontKey, number> = {
-  gothic: 800, mincho: 700, round: 700, pop: 400, brush: 400, mono: 700,
+  gothic: 900, mincho: 700, round: 900, pop: 400, brush: 400, mono: 400,
 };
 
 const path = (points: number[]): string => {

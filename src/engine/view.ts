@@ -1,4 +1,4 @@
-import type { Flip, GameState, Tally, TopicPhase, RoomPhase, Verdict } from './types';
+import type { Flip, GalleryEntry, GameState, Tally, TopicPhase, RoomPhase, Verdict } from './types';
 
 /**
  * 1人分に絞った状態（SPEC.md §8.4）。
@@ -50,6 +50,7 @@ export type View = {
   brought: { id: string; word: string; mine: boolean }[];
   /** 投稿された手書きお題は本文を配らない。自分の分だけ、消せるように返す */
   myTopics: { id: string; text: string }[];
+  gallery: GalleryEntry[];
   handmadeCount: number;
 };
 
@@ -88,6 +89,9 @@ export function viewFor(s: GameState, code: string, me: string): View {
       : null,
     deadline: s.deadline,
     brought: s.brought.map((b) => ({ id: b.id, word: b.word, mine: b.byId === me })),
+    // 見返し用の控え。**全部が既に公開された情報**なので、そのまま全員へ配れる
+    // （history と違い、次のお題を計算できる材料は入っていない）
+    gallery: s.gallery,
     // 他人が出したお題の本文は配らない。出るまで知らないから面白い
     myTopics: s.handmade.filter((h) => h.byId === me).map((h) => ({ id: h.id, text: h.text })),
     handmadeCount: s.handmade.length,

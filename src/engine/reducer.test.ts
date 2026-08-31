@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createGame, DELAY, reduce, start, startTopic, toLobby, type Ctx } from './reducer';
+import { createGame, DELAY, reduce, start, startTopic, toLobby, type Ctx, handoffHost } from './reducer';
+import { viewFor } from './view';
 import type { Action, Flip, GameState, Player, TopicRecord } from './types';
 
 /**
@@ -71,12 +72,38 @@ describe('回答権', () => {
     expect(a).toBe(s);
   });
 
-  it('回答すると、その人の「次へ」の印が自動的に外れる', () => {
+  it('回答しても、その人の「次へ」の印は外れない', () => {
+    // 回答のたびに押し直させない（2026-08-31 に本人が変更）。
+    // 回答しながら「次へ行きたい」と思っていてよい
     let s = live(['p0', 'p1']);
     s = run(s, { type: 'NEXT_READY', playerId: 'p1', ready: true });
-    expect(s.players.find((p) => p.id === 'p1')?.ready).toBe(true);
     s = run(s, { type: 'ANSWER_CLAIM', playerId: 'p1', flip: drawn });
-    expect(s.players.find((p) => p.id === 'p1')?.ready).toBe(false);
+    expect(s.players.find((p) => p.id === 'p1')?.ready).toBe(true);
+  });
+
+  it('最初の公開でだけ印を取り直し、2人目以降の公開では残す', () => {
+    // 最初の公開でボタンの文字が「引き直す」から「次のお題に行く」へ変わる。
+    // 前の意味で押した印を次の意味に流用してはいけない（§7.3）。
+    // 逆に、意味が変わらない2人目以降で消すのは押し直させるだけで意味がない
+    let s = live(['p0', 'p1', 'p2']);
+    s = run(s, { type: 'NEXT_READY', playerId: 'p0', ready: true });
+    s = run(s, { type: 'ANSWER_CLAIM', playerId: 'p1', flip: drawn }, 1000);
+    s = run(s, { type: 'TICK', now: 4000 }, 4000);
+    s = run(s, { type: 'ANSWER_REVEAL', playerId: 'p1' }, 4000);
+    expect(s.players.find((p) => p.id === 'p0')?.ready).toBe(false);
+
+    // 2人目の回答。ここでは残る
+    s = run(s, { type: 'SCORE', playerId: 'p0', value: 1 }, 5000);
+    s = run(s, { type: 'SCORE', playerId: 'p2', value: 1 }, 5000);
+    s = run(s, { type: 'TICK', now: 5000 + 1200 }, 5000 + 1200);
+    s = run(s, { type: 'TICK', now: 5000 + 1200 + 4500 }, 5000 + 1200 + 4500);
+    expect(s.topicPhase).toBe('open');
+
+    s = run(s, { type: 'NEXT_READY', playerId: 'p0', ready: true }, 12000);
+    s = run(s, { type: 'ANSWER_CLAIM', playerId: 'p2', flip: drawn }, 12000);
+    s = run(s, { type: 'TICK', now: 15000 }, 15000);
+    s = run(s, { type: 'ANSWER_REVEAL', playerId: 'p2' }, 15000);
+    expect(s.players.find((p) => p.id === 'p0')?.ready).toBe(true);
   });
 
   it('宣言は2.0秒でお題の再表示へ移る', () => {
@@ -281,5 +308,74 @@ describe('ロビーへ戻す', () => {
   it('ロビーにいる間はゲームの行動を受け付けない', () => {
     const s = createGame();
     expect(run(s, { type: 'ANSWER_CLAIM', playerId: 'p0', flip: drawn })).toBe(s);
+  });
+});
+
+describe('handoffHost（ホストを渡す）', () => {
+  it('ホストが抜けたら、繋がっている次の人へ渡る', () => {
+    const s = live(['p0', 'p1', 'p2']);
+    expect(s.players.find((p) => p.isHost)?.id).toBe('p0');
+    const after = handoffHost(s, 'p0');
+    expect(after.players.find((p) => p.isHost)?.id).toBe('p1');
+    // ホストは1人だけ
+    expect(after.players.filter((p) => p.isHost)).toHaveLength(1);
+  });
+
+  it('ホスト以外が抜けても動かさない', () => {
+    const s = live(['p0', 'p1']);
+    expect(handoffHost(s, 'p1')).toBe(s);
+  });
+
+  it('切れている人は飛ばす', () => {
+    let s = live(['p0', 'p1', 'p2']);
+    s = { ...s, players: s.players.map((p) => (p.id === 'p1' ? { ...p, connected: false } : p)) };
+    expect(handoffHost(s, 'p0').players.find((x) => x.isHost)?.id).toBe('p2');
+  });
+
+  it('渡す相手が誰も居なければ動かさない（そのうち戻ってくる）', () => {
+    let s = live(['p0', 'p1']);
+    s = { ...s, players: s.players.map((p) => (p.id === 'p1' ? { ...p, connected: false } : p)) };
+    expect(handoffHost(s, 'p0')).toBe(s);
+  });
+});
+
+describe('見返し用の控え（gallery）', () => {
+  it('判定が出た回答を、お題の文と判定ごと控える', () => {
+    let s = live(['p0', 'p1']);
+    const topicText = s.topic?.text ?? '';
+    s = run(s, { type: 'ANSWER_CLAIM', playerId: 'p1', flip: drawn }, 1000);
+    s = run(s, { type: 'TICK', now: 4000 }, 4000);
+    s = run(s, { type: 'ANSWER_REVEAL', playerId: 'p1' }, 4000);
+    expect(s.gallery).toHaveLength(0); // 公開しただけでは控えない
+    s = run(s, { type: 'SCORE', playerId: 'p0', value: 3 }, 5000);
+
+    expect(s.gallery).toHaveLength(1);
+    const g = s.gallery[0];
+    expect(g.playerId).toBe('p1');
+    expect(g.topicText).toBe(topicText);
+    expect(g.flip).toEqual(drawn);
+    expect(g.tally.verdict).toBe('perfect');
+  });
+
+  it('id は状態から決める（乱数も時刻も使わない）', () => {
+    // 乱数や Date.now() で振ると、同じ状態から同じ結果が出なくなってテストが書けない
+    let s = live(['p0', 'p1']);
+    const topicId = s.topic?.id;
+    s = run(s, { type: 'ANSWER_CLAIM', playerId: 'p1', flip: drawn }, 1000);
+    s = run(s, { type: 'TICK', now: 4000 }, 4000);
+    s = run(s, { type: 'ANSWER_REVEAL', playerId: 'p1' }, 4000);
+    s = run(s, { type: 'SCORE', playerId: 'p0', value: 1 }, 5000);
+    expect(s.gallery[0].id).toBe(`${topicId}|p1|0`);
+  });
+
+  it('viewFor はそのまま配る（全部すでに公開された情報）', () => {
+    let s = live(['p0', 'p1']);
+    s = run(s, { type: 'ANSWER_CLAIM', playerId: 'p1', flip: drawn }, 1000);
+    s = run(s, { type: 'TICK', now: 4000 }, 4000);
+    s = run(s, { type: 'ANSWER_REVEAL', playerId: 'p1' }, 4000);
+    s = run(s, { type: 'SCORE', playerId: 'p0', value: 2 }, 5000);
+    // 回答者本人にも、採点した側にも同じ控えが見える
+    expect(viewFor(s, 'ABCD', 'p0').gallery).toHaveLength(1);
+    expect(viewFor(s, 'ABCD', 'p1').gallery).toHaveLength(1);
   });
 });

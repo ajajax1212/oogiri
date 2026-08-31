@@ -42,6 +42,7 @@ export function createGame(): GameState {
     brought: [],
     handmade: [],
     history: [],
+    gallery: [],
   };
 }
 
@@ -66,9 +67,11 @@ export function reduce(state: GameState, action: Action, ctx: Ctx): GameState {
 
       return {
         ...state,
-        // 回答したいのに次へ行くのは矛盾しているので、印は自動的に外す
+        // 「次のお題に行く」の印は**外さない**。回答するたびに押し直すのは煩わしい、
+        // というのが本人の判断（2026-08-31）。回答しながら次へ行く意思を
+        // 持てるようにする。印を外すのは §7.3 のボタンの意味が変わる1回だけ
         players: state.players.map((p) =>
-          p.id === action.playerId ? { ...p, ready: false, writing: false } : p,
+          p.id === action.playerId ? { ...p, writing: false } : p,
         ),
         answer: { playerId: action.playerId, flip: action.flip, scores: {}, tally: null },
         topicPhase: 'declared',
@@ -84,8 +87,13 @@ export function reduce(state: GameState, action: Action, ctx: Ctx): GameState {
         topicPhase: 'reveal',
         deadline: null,
         revealedCount: state.revealedCount + 1,
-        // ボタンの意味が「引き直す」から「次へ」に変わるので、意思を取り直す（§7.3）
-        players: state.players.map((p) => ({ ...p, ready: false })),
+        // **最初の公開のときだけ**意思を取り直す（§7.3）。ここでボタンの文字が
+        // 「引き直す」から「次のお題に行く」へ変わるので、前の意味で押した印を
+        // そのまま次の意味に流用してはいけない。2人目以降の公開では意味が
+        // 変わらないので、押した印はそのまま残す（回答のたびに押し直させない）
+        players: state.revealedCount === 0
+          ? state.players.map((p) => ({ ...p, ready: false }))
+          : state.players,
       };
     }
 
@@ -164,8 +172,19 @@ function closeScoring(s: GameState, ctx: Ctx): GameState {
   const a = s.answer!;
   // 押した後に切断した人の票は有効なまま残す。押した事実は取り消さない
   const t = tally(Object.values(a.scores) as Score[]);
+  // 判定が出た時点で控える。**id は状態から決める**（乱数や時刻を使うと、
+  // 同じ状態から同じ結果が出なくなってテストが書けない）
+  const entry = {
+    id: `${s.topic?.id ?? '-'}|${a.playerId}|${s.gallery.length}`,
+    topicText: s.topic?.text ?? '',
+    playerId: a.playerId,
+    playerName: byId(s, a.playerId)?.name ?? '',
+    flip: a.flip,
+    tally: t,
+  };
   return {
     ...s,
+    gallery: [...s.gallery, entry],
     answer: { ...a, tally: t },
     topicPhase: 'tally',
     deadline: ctx.now + DELAY.tally,
@@ -215,6 +234,24 @@ export function addPlayer(s: GameState, p: Player): GameState {
   return { ...s, players: [...s.players, p] };
 }
 
+/**
+ * ホストを渡す。ホストが抜けても部屋が続くようにするため（2026-08-31）。
+ *
+ * **繋がっている人の中で、いちばん先に座った人**へ渡す。乱数で選ぶと、
+ * 同じ状態から同じ結果が出なくなってテストが書けない。誰も繋がっていない
+ * ときは動かさない（そのうち誰かが戻ってくる。部屋ごと消えるのは sweep の仕事）。
+ */
+export function handoffHost(s: GameState, leavingId: string): GameState {
+  const host = s.players.find((p) => p.isHost);
+  if (host && host.id !== leavingId) return s; // ホストは抜けていない
+  const next = s.players.find((p) => p.id !== leavingId && p.connected);
+  if (!next) return s;
+  return {
+    ...s,
+    players: s.players.map((p) => ({ ...p, isHost: p.id === next.id })),
+  };
+}
+
 export function setConnected(s: GameState, id: string, connected: boolean): GameState {
   return {
     ...s,
@@ -224,6 +261,7 @@ export function setConnected(s: GameState, id: string, connected: boolean): Game
 
 export function start(s: GameState, ctx: Ctx): GameState {
   if (s.roomPhase !== 'lobby') return s;
+  // gallery は消さない。**その晩に出た回答は、ゲームを跨いでも見返せる**方がいい
   return startTopic({ ...s, roomPhase: 'live', history: [] }, ctx);
 }
 

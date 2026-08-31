@@ -4,6 +4,9 @@ import type { Flip, Score } from '../engine/types';
 import type { View } from '../engine/view';
 import { EV } from './events';
 
+/** 手が止まってから「書いています」を消すまで。線の切れ目で消えない長さ */
+const WRITING_LINGER = 1600;
+
 /**
  * 接続・再接続・状態受信。
  *
@@ -103,6 +106,37 @@ export function useRoom() {
     [call],
   );
 
+  /**
+   * 「書いています」の点灯。**消すほうだけ遅らせる。**
+   *
+   * ペンは点を打つたびに pointerdown / pointerup を繰り返すので、素のまま流すと
+   * ちょんちょん描いた回数だけ全員の画面で印が点滅する。人が見て意味があるのは
+   * 「今まさに手を動かしているか」であって、1回の線の切れ目ではない。
+   *
+   * 点けるのは即座（反応が遅いと嘘に見える）、消すのは手が止まって
+   * しばらく経ってから。同じ値を続けて送らないので、通信も減る。
+   */
+  const writingOn = useRef(false);
+  const writingOff = useRef<number | null>(null);
+  const setWriting = useCallback((writing: boolean) => {
+    if (writingOff.current !== null) {
+      window.clearTimeout(writingOff.current);
+      writingOff.current = null;
+    }
+    if (writing) {
+      if (writingOn.current) return;   // もう点いている。同じものを送らない
+      writingOn.current = true;
+      void act({ type: 'WRITING', writing: true });
+      return;
+    }
+    if (!writingOn.current) return;
+    writingOff.current = window.setTimeout(() => {
+      writingOff.current = null;
+      writingOn.current = false;
+      void act({ type: 'WRITING', writing: false });
+    }, WRITING_LINGER);
+  }, [act]);
+
   return {
     view, error, connected, setError,
     enter,
@@ -118,6 +152,6 @@ export function useRoom() {
     reveal: () => act({ type: 'ANSWER_REVEAL' }),
     score: (value: Score) => act({ type: 'SCORE', value }),
     setReady: (ready: boolean) => act({ type: 'NEXT_READY', ready }),
-    setWriting: (writing: boolean) => act({ type: 'WRITING', writing }),
+    setWriting,
   };
 }
