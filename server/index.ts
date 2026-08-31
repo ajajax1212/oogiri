@@ -249,9 +249,11 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on(EV.leave, () => {
+  // ack を必ず返す。クライアントは `await` してから席を捨てて画面を移すので、
+  // 返さないと**抜けた本人の画面だけが部屋に貼り付いたまま**になる
+  socket.on(EV.leave, (_m: unknown, ack?: (r: unknown) => void) => {
     const { room, me } = ctxSocket(socket);
-    if (!room || !me) return;
+    if (!room || !me) return ack?.({ ok: true });
 
     // 抜ける人が回答権を持ったまま消えると、誰も公開できず場が止まる。
     // 先に回答権を返してから席を外す（切断と同じ扱い）
@@ -274,6 +276,7 @@ io.on('connection', (socket) => {
     // 抜けたことで採点や合意の条件が満たされることがある（残り全員が押し終える）
     apply(room, { type: 'TICK', now: Date.now() }, push(room));
     broadcast(room);
+    ack?.({ ok: true });
   });
 
   socket.on('disconnect', () => {

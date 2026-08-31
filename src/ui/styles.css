@@ -103,6 +103,9 @@ input:focus { outline: none; border-color: var(--gold); }
 input::placeholder { color: #6d6143; }
 
 .app { max-width: 1120px; margin: 0 auto; padding: 20px 20px 120px; }
+/* 大喜利の画面だけ右にプレイヤーの列を1本増やしたので、その分だけ広く取る。
+   1120 のままだと左が 900px 台に痩せて、道具箱が2段に折れて板の高さを食う */
+.app.game { max-width: 1340px; }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .col { display: flex; flex-direction: column; gap: 12px; }
 .muted { color: var(--dim); }
@@ -388,14 +391,29 @@ input::placeholder { color: #6d6143; }
 .grip.l { left: -7px; }
 .grip.r { right: -7px; }
 
+/* 角の印。横の印（縦長）と形を変えてあるのは、役割が違うから
+   ―― 横は折り返す幅だけ、角は文字ごと大きさを変える。
+   同じ形にすると、どちらを掴んだのか手が覚えられない */
+.grip.c {
+  top: auto;
+  margin-top: 0;
+  width: 13px;
+  height: 13px;
+  border-radius: 2px;
+}
+.grip.c.tl { left: -7px; top: -7px; cursor: nwse-resize; }
+.grip.c.tr { right: -7px; top: -7px; cursor: nesw-resize; }
+.grip.c.bl { left: -7px; bottom: -7px; cursor: nesw-resize; }
+.grip.c.br { right: -7px; bottom: -7px; cursor: nwse-resize; }
+
 /* 道具箱で書体を見せるための実物。Flip.tsx の FONT_STACK と揃える */
 :root {
-  --f-gothic: 'Yu Gothic', 'YuGothic', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
-  --f-mincho: 'Yu Mincho', 'YuMincho', 'Hiragino Mincho ProN', 'MS PMincho', serif;
-  --f-round: 'UD デジタル教科書体 NK-R', 'UD Digi Kyokasho NK-R', 'Hiragino Maru Gothic ProN', 'Meiryo', sans-serif;
-  --f-pop: 'HGP創英角ﾎﾟｯﾌﾟ体', 'HGSoeiKakupoptai', 'UD デジタル教科書体 NK-R', 'Hiragino Maru Gothic ProN', sans-serif;
-  --f-brush: 'HGP行書体', 'HGGyoshotai', '游教科書体', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
-  --f-mono: 'BIZ UDGothic', 'MS Gothic', 'Osaka-Mono', monospace;
+  --f-gothic: 'Noto Sans JP', 'Yu Gothic', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+  --f-mincho: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', 'MS PMincho', serif;
+  --f-round: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Meiryo', sans-serif;
+  --f-pop: 'Mochiy Pop One', 'HGP創英角ﾎﾟｯﾌﾟ体', 'Hiragino Maru Gothic ProN', sans-serif;
+  --f-brush: 'Yuji Syuku', 'HGP行書体', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  --f-mono: 'Yusei Magic', 'Yu Gothic', 'Hiragino Kaku Gothic ProN', sans-serif;
 }
 .tools .font { padding: 8px 12px; font-size: 15px; }
 .tools .range { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); }
@@ -444,9 +462,113 @@ input::placeholder { color: #6d6143; }
   letter-spacing: .04em;
 }
 
+/* --- 盤面の割り付け --- */
+
+/* 演出（.show）と書く場所（.desk）を縦に積み、プレイヤー一覧を右の列に出す。
+   一覧を下の帯に入れていたころは、「書いています」が点いたり消えたりするたびに
+   折り返しが変わって帯の高さごと動いた。**列の幅を固定**すれば、
+   何人増えても何人が書き始めても、左の盤面は1ピクセルも動かない */
+.floor {
+  display: grid;
+  /* 右は固定値。auto や max-content にすると中身の長さで幅が動く */
+  grid-template-columns: minmax(0, 1fr) 196px;
+  gap: 18px;
+  align-items: start;
+}
+/* minmax(0, 1fr) と対で要る。既定の min-width: auto だと中身の最小幅で列が押し広がる */
+.main { min-width: 0; }
+
+/* お題の帯（sticky・高さ約 76px）の直下に貼り付ける */
+.side { position: sticky; top: 88px; }
+.who { display: grid; gap: 6px; }
+/* ロビーの .seat（横並びの丸）と同じ名前を使うので、右の列の中だけ作り替える */
+.who .seat {
+  display: block;
+  border-radius: 4px;
+  padding: 7px 10px 6px;
+  width: 100%;
+}
+.who .seat .nm {
+  display: block;
+  font-size: 14px;
+  /* 長い名前で列が広がらないよう、必ず1行で切る */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 印の行は**常に高さを持たせる**。出入りで行が増減すると、そのたびに
+   下の席がずれて一覧全体がチラつく（これが下の帯にあったころの不満そのもの） */
+.who .seat .st {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 17px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* --- 書く場所（どの場面でも居座る）--- */
+
+.desk {
+  margin-top: 18px;
+  padding: 8px 10px 12px;
+  background: #0f0e09;
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--gold-dk);
+  border-radius: 3px;
+}
+.desk > .bar { display: flex; align-items: center; gap: 10px; padding: 2px 2px 8px; }
+.desk .ttl {
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: .16em;
+  color: var(--gold-hi);
+}
+.desk > .bar .st {
+  flex: 1;
+  min-width: 0;
+  color: var(--dim);
+  font-size: 12px;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 幅を決め打つのは、ラベルが「畳む」「書く」で変わっても帯の中が動かないため */
+.desk .fold { padding: 5px 0; font-size: 12px; width: 68px; text-align: center; }
+
+/* open は書くための場面。畳ませない（畳んでも出す）ので、見出しごと消して
+   これまでと同じ「板だけがある画面」に戻す */
+.app[data-phase='open'] .desk {
+  margin-top: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.app[data-phase='open'] .desk > .bar { display: none; }
+
+/* 押せない理由。黙って灰色のボタンだけ出すと、書き足りないのか
+   他人が回答中なのかが分からない */
+.why {
+  margin: 0;
+  color: var(--dim);
+  font-size: 13px;
+  letter-spacing: .06em;
+  text-align: center;
+}
+.desk > .why { padding: 22px 10px; }
+
 /* --- 回答する / 公開する --- */
 
-.act { display: flex; justify-content: center; margin-top: 18px; }
+.act {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+}
 .act button { padding: 16px 52px; font-size: 19px; letter-spacing: .1em; }
 .wait {
   min-height: 34vh;
@@ -456,6 +578,58 @@ input::placeholder { color: #6d6143; }
   color: var(--dim);
   letter-spacing: .16em;
 }
+.reveal-btn { padding: 20px 56px; font-size: 22px; letter-spacing: .14em; }
+
+/* --- 演出と下書きが同じ画面に並ぶときの板の大きさ ---
+
+   1画面に白い板が2枚出るので、**演出のほうを必ず大きく残す**。
+   セレクタが長いのは、狭い画面の @media が .board へ直接 --boardh を
+   入れており（詳細度 0,1,0）、継承では勝てないため。
+   .closing 側は .closing .board（0,2,0）も持っているので、そこにも勝つ数が要る */
+.app[data-desk='1'] .show .board,
+.app[data-desk='1'] .show .reveal .board,
+.app[data-desk='1'] .show .closing,
+.app[data-desk='1'] .show .closing .board {
+  --boardh: max(150px, min(28vh, calc(100vh - 470px)));
+}
+
+/* 1画面に収めるための切り詰め。**open では効かせない。**
+   open は書くための場面なので、道具箱も説明文もそのまま出す */
+.app[data-desk='1']:not([data-phase='open']) .strip { padding: 8px 12px 10px; }
+.app[data-desk='1']:not([data-phase='open']) .strip b { font-size: min(calc(70vw / var(--n, 20)), 23px); }
+.app[data-desk='1']:not([data-phase='open']) .desk .tools { padding: 6px 8px; gap: 5px; margin-bottom: 6px; }
+.app[data-desk='1']:not([data-phase='open']) .desk .tools button { padding: 5px 10px; font-size: 13px; }
+.app[data-desk='1']:not([data-phase='open']) .desk .tools .w { width: 38px; padding: 5px 0; }
+.app[data-desk='1']:not([data-phase='open']) .desk .tools .icon { min-width: 38px; padding: 5px 8px; font-size: 13px; }
+.app[data-desk='1']:not([data-phase='open']) .desk .tools .range input { width: 76px; }
+/* 使い方の説明は open のときに読める。演出中は場所のほうが要る */
+.app[data-desk='1']:not([data-phase='open']) .desk .tools .hint { display: none; }
+.app[data-desk='1']:not([data-phase='open']) .scores { margin-top: 12px; }
+.app[data-desk='1']:not([data-phase='open']) .by { margin-top: 8px; }
+/* max() で床を張ってあるのは、背の低いウィンドウで calc が負に振れると
+   min() がそれを拾って板が消えるため（縦に溢れるほうがまだ遊べる） */
+.desk .board { --boardh: max(120px, min(19vh, calc(100vh - 520px))); }
+/* open は書くための場面。板は元の大きさに戻す */
+.app[data-phase='open'] .desk .board { --boardh: min(44vh, calc(100vh - 330px)); }
+
+/* open 以外では「回答する」は必ず押せない（先着1人・SPEC.md §5.1）。
+   押せないボタンに大きな場所を取らせず、理由を横に1行で並べる。
+   縦に積むと、そのぶん下書きの板が下の帯へ潜って書けなくなる */
+.app:not([data-phase='open']) .act {
+  flex-direction: row;
+  gap: 12px;
+  margin-top: 10px;
+}
+.app:not([data-phase='open']) .act button { padding: 9px 22px; font-size: 15px; letter-spacing: .06em; }
+.app:not([data-phase='open']) .act .why, .app:not([data-phase='open']) .act .err { text-align: left; min-height: 0; }
+
+/* 下書きを開いているあいだは、間を取るだけの画面の背丈を詰める。
+   62vh / 34vh のままだと、名前だけの画面で下書きが画面外へ落ちる */
+.app[data-desk='1'] .declare { min-height: 26vh; }
+.app[data-desk='1'] .wait { min-height: 84px; }
+.app[data-desk='1'] .reveal-btn { padding: 15px 40px; font-size: 19px; }
+
+.extra { margin-top: 18px; }
 
 /* --- 公開（reveal）--- */
 
@@ -648,13 +822,17 @@ input::placeholder { color: #6d6143; }
    範囲だけを広げる。要素そのものを伸ばすと中の段の模様まで伸び縮みして、
    段の切れ目が動いてしまう（12段が12段に見えない）。
 
-   ガコンと止めたいので、尺は 0.13 秒と短く、終わりに軽く行き過ぎる曲線を当てる。
-   等速で滑らせると「あと何段来るのか」の緊張が出ない */
+   ガコンと止めたいので、尺は短く、終わりに軽く行き過ぎる曲線を当てる。
+   等速で滑らせると「あと何段来るのか」の緊張が出ない。
+
+   **0.13 秒から 0.10 秒へ詰めた。** 溜めを短くした結果、満点の 12 段は
+   段の間隔が 0.1 秒を切る。尺が間隔より長いと前の段が動き切る前に次が来て、
+   12 段が1回の滑りに溶ける（段が段に見えない） */
 .closing .bar {
   position: absolute;
   inset: 0;
   background-repeat: repeat;
-  transition: clip-path 130ms cubic-bezier(.16, 1.55, .3, 1);
+  transition: clip-path 100ms cubic-bezier(.16, 1.55, .3, 1);
 }
 /* 段の高さは「板の半分 ÷ 12」＝ 全面の 1/24。上下は高さ、左右は幅で割る */
 .closing .bar.t, .closing .bar.b { background-size: 100% calc(100% / 24); }
@@ -671,8 +849,9 @@ input::placeholder { color: #6d6143; }
   position: absolute;
   pointer-events: none;
   box-shadow: 0 0 16px rgba(255, 225, 0, .8);
-  transition: top 130ms cubic-bezier(.16, 1.55, .3, 1), bottom 130ms cubic-bezier(.16, 1.55, .3, 1),
-              left 130ms cubic-bezier(.16, 1.55, .3, 1), right 130ms cubic-bezier(.16, 1.55, .3, 1);
+  /* バーと同じ尺で動かす。ずらすと光だけが枠から離れて先行する */
+  transition: top 100ms cubic-bezier(.16, 1.55, .3, 1), bottom 100ms cubic-bezier(.16, 1.55, .3, 1),
+              left 100ms cubic-bezier(.16, 1.55, .3, 1), right 100ms cubic-bezier(.16, 1.55, .3, 1);
 }
 .closing .edge.t, .closing .edge.b {
   height: 3px;
@@ -708,7 +887,8 @@ input::placeholder { color: #6d6143; }
   inset: 0;
   pointer-events: none;
   box-shadow: inset 0 0 22px 2px rgba(255, 242, 178, .68);
-  animation: hit .22s ease-out both;
+  /* 段の間隔より長いと、次の段の当たりに前の当たりが残って光が溜まる */
+  animation: hit .16s ease-out both;
 }
 @keyframes hit { from { opacity: .95; } to { opacity: 0; } }
 
@@ -718,8 +898,8 @@ input::placeholder { color: #6d6143; }
 
    揺らすのは板を包む箱の transform だけ。transform はレイアウト幅を
    変えないので、板の cqw（＝文字の大きさ）には触らない */
-.closing[data-odd='1'] .stage { animation: clunkA .17s cubic-bezier(.2, .85, .3, 1) both; }
-.closing[data-odd='0'] .stage { animation: clunkB .17s cubic-bezier(.2, .85, .3, 1) both; }
+.closing[data-odd='1'] .stage { animation: clunkA .13s cubic-bezier(.2, .85, .3, 1) both; }
+.closing[data-odd='0'] .stage { animation: clunkB .13s cubic-bezier(.2, .85, .3, 1) both; }
 .closing[data-step='0'] .stage { animation: none; }
 @keyframes clunkA { 0% { transform: scale(1.009); } 42% { transform: scale(.9965); } 100% { transform: none; } }
 @keyframes clunkB { 0% { transform: scale(1.009); } 42% { transform: scale(.9965); } 100% { transform: none; } }
@@ -854,8 +1034,11 @@ input::placeholder { color: #6d6143; }
   }
 }
 
-/* --- 参加者の帯 --- */
+/* --- 下の帯（進行のボタンだけ）--- */
 
+/* プレイヤー一覧はここから右の列（.side）へ移した。
+   一覧が入っていたころは、人が増えるたびに帯が2段3段と折れて
+   「次のお題に行く」の位置が動いた。帯に残すのは**押すもの**だけにする */
 .dock {
   position: fixed;
   left: 0; right: 0; bottom: 0;
@@ -864,8 +1047,18 @@ input::placeholder { color: #6d6143; }
   border-top: 3px solid var(--gold);
   padding: 10px 20px 12px;
 }
-.dock .inner { max-width: 1120px; margin: 0 auto; display: flex; gap: 12px; align-items: center; }
-.seats { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; min-width: 0; }
+/* 盤面（.app.game）と同じ幅で揃える。ずれると帯のボタンだけが内側へ寄る */
+.dock .inner { max-width: 1340px; margin: 0 auto; display: flex; gap: 12px; align-items: center; }
+.dock .grow { flex: 1; }
+/* 確認で「ほんとに抜ける？」に化けるので、長いほうの幅を先に取っておく。
+   取らないと、押した瞬間に隣のボタンが横へずれて押し間違える */
+.leave { min-width: 148px; }
+button.danger {
+  background: #2a1410;
+  border-color: #a8452a;
+  color: #ffb9a2;
+}
+button.danger:hover:not(:disabled) { background: #3d1c16; border-color: #ff8f6a; color: #ffd9cc; }
 .seat {
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -914,17 +1107,54 @@ details > summary:hover { color: var(--gold-hi); }
 
 /* --- 狭い画面 --- */
 
+/* 右の列が細くなりすぎる前に幅を1段落とす。196px のままだと、
+   900px あたりで左の板が縮んで文字が読めなくなる */
+@media (max-width: 900px) {
+  .floor { grid-template-columns: minmax(0, 1fr) 152px; gap: 12px; }
+  .who .seat { padding: 6px 8px 5px; }
+  .who .seat .nm { font-size: 13px; }
+}
+
+/* ここから下は1列。一覧は**盤面より後ろ（＝下）**に置く。
+   下の帯へ戻さないのは、帯に入れると折り返しで帯の高さが動き、
+   「次のお題に行く」が上下に跳ねるため（右へ移した理由と同じ） */
+@media (max-width: 640px) {
+  .floor { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .side { position: static; }
+  /* 画面の末尾なので、折り返しても上のものは動かない。
+     縦積みのままだと人数分そのまま背が伸びて、指の届く範囲から出てしまう */
+  .who { display: flex; flex-wrap: wrap; gap: 6px; }
+  .who .seat { width: auto; display: flex; align-items: center; gap: 8px; border-radius: 999px; padding: 5px 12px; }
+  .who .seat .nm { font-size: 14px; }
+  .who .seat .st { margin-top: 0; min-height: 0; }
+}
+
 @media (max-width: 720px) {
   .app { padding: 16px 14px 128px; }
   .strip { margin: -16px -14px 14px; padding: 10px 12px 12px; }
   .board { --boardh: min(38vh, calc(100vh - 280px)); }
   .reveal .board { --boardh: min(38vh, calc(100vh - 322px)); }
   .closing, .closing .board { --boardh: min(38vh, calc(100vh - 322px)); }
+  /* 狭い画面は縦に積むので、2枚の板をさらに詰める */
+  .app[data-desk='1'] .show .board,
+  .app[data-desk='1'] .show .reveal .board,
+  .app[data-desk='1'] .show .closing,
+  .app[data-desk='1'] .show .closing .board {
+    --boardh: max(130px, min(27vh, calc(100vh - 430px)));
+  }
+  .desk .board { --boardh: max(130px, min(22vh, calc(100vh - 460px))); }
+  .app[data-phase='open'] .desk .board { --boardh: min(38vh, calc(100vh - 280px)); }
   .dock { padding: 8px 12px 10px; }
   .dock .inner { flex-wrap: wrap; gap: 8px; }
-  /* flex: 1 は基準幅 0 なので width では折り返せない。基準幅ごと 100% にする */
-  .seats { order: 2; flex: 1 0 100%; }
   .dock .inner > button { flex: 1; }
+  /* 隙間を残したまま折り返すと、進行のボタンが1文字幅まで潰れて縦書きになる
+     （実際にそうなった）。狭い画面では隙間を消して、進行のボタンに1行渡す */
+  .dock .grow { display: none; }
+  /* `.dock .inner > button` と同じ強さでは負けるので、そこへ .agree を足す */
+  .dock .inner > button.agree { flex: 1 0 100%; }
+  /* 幅は flex が等分するので、確認の長いラベルが入る大きさまで字を落とす。
+     入り切らないと隣のボタンを押しのけて、指の下でボタンが動く */
+  .leave { min-width: 0; font-size: 13px; padding: 10px 6px; }
   /* 狭い画面では「音」の字を落としてアイコンだけに。帯が3段に折れるのを防ぐ */
   .sfx { flex: 0 0 auto; padding: 8px 10px; }
   .sfx span { display: none; }

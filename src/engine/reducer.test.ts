@@ -95,8 +95,11 @@ describe('回答権', () => {
     // 2人目の回答。ここでは残る
     s = run(s, { type: 'SCORE', playerId: 'p0', value: 1 }, 5000);
     s = run(s, { type: 'SCORE', playerId: 'p2', value: 1 }, 5000);
-    s = run(s, { type: 'TICK', now: 5000 + 1200 }, 5000 + 1200);
-    s = run(s, { type: 'TICK', now: 5000 + 1200 + 4500 }, 5000 + 1200 + 4500);
+    // 秒数は DELAY から取る。べた書きすると尺を調整するたびにテストが落ちる
+    const t1 = 5000 + DELAY.tally;
+    const t2 = t1 + DELAY.result;
+    s = run(s, { type: 'TICK', now: t1 }, t1);
+    s = run(s, { type: 'TICK', now: t2 }, t2);
     expect(s.topicPhase).toBe('open');
 
     s = run(s, { type: 'NEXT_READY', playerId: 'p0', ready: true }, 12000);

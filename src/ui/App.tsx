@@ -23,6 +23,22 @@ const saveDraft = (f: Flip) => {
   try { sessionStorage.setItem(DRAFT, JSON.stringify(f)); } catch { /* 諦める */ }
 };
 
+/**
+ * 書く場所を畳んでいるか。
+ *
+ * **既定は開いている。** 畳んだかどうかを憶えないと、場面が変わるたびに開き直しになり、
+ * 「早い人が矢継ぎ早に回答して書く時間が無い」という元の不満がそのまま残る。
+ * 席の合鍵と同じ sessionStorage に置くのは、同じブラウザの別タブ（＝別の人として
+ * 動作確認する）に設定を持ち込ませないため。
+ */
+const DESK = 'oogiri.desk';
+const loadDeskOpen = (): boolean => {
+  try { return sessionStorage.getItem(DESK) !== '0'; } catch { return true; }
+};
+const saveDeskOpen = (open: boolean) => {
+  try { sessionStorage.setItem(DESK, open ? '1' : '0'); } catch { /* 諦める */ }
+};
+
 /** CSS 変数を style に渡すための型。any で通さない */
 type Vars = CSSProperties & Record<`--${string}`, string | number>;
 
@@ -388,132 +404,204 @@ function Game({ r, v, flip, setFlip }: { r: R; v: V; flip: Flip; setFlip: (f: Fl
   // 自分が押したら採点が揃うか。scored は自分の分を含まない数
   const lastJudge = !!v.answer && v.answer.scored + 1 >= v.answer.judges;
 
+  // 畳んだかどうかは人の判断なので憶えておく。**場面ごとに開き直させない。**
+  // open は書くための場面なので、畳んでいても必ず出す
+  const [deskOpen, setDeskOpen] = useState(loadDeskOpen);
+  const deskShown = v.topicPhase === 'open' || deskOpen;
+  const foldDesk = (open: boolean) => { setDeskOpen(open); saveDeskOpen(open); };
+
+  // 書いている最中かどうか。**画面の頭へ戻すかどうかの判断にしか使わない**ので、
+  // 変わっても描き直す必要が無い（state ではなく ref）
+  const writing = useRef(false);
+  const onActivity = (w: boolean) => { writing.current = w; r.setWriting(w); };
+
   // 場面が変わったら画面の頭へ戻す。前の場面のスクロール位置が残っていると、
-  // 次の場面が画面の外から始まり「何も出ていない」ように見える（実際に見た）
-  useEffect(() => { window.scrollTo({ top: 0 }); }, [v.topicPhase, v.topicId]);
+  // 次の場面が画面の外から始まり「何も出ていない」ように見える（実際に見た）。
+  // ただし**書いている最中は動かさない**。下書きは演出の下に置いてあるので、
+  // 誰かが回答するたびに手元が画面外へ飛ぶことになる
+  useEffect(() => {
+    if (writing.current) return;
+    window.scrollTo({ top: 0 });
+  }, [v.topicPhase, v.topicId]);
 
   const clock = useRevealClock(v);
   const answerKey = `${v.topicId ?? '-'}|${v.answer?.playerId ?? '-'}`;
 
+  // 回答権は先着1人・open のときだけ（SPEC.md §5.1）。**この条件は変えない。**
+  // 押せない理由は必ず画面に出す。黙って灰色のボタンだと、
+  // 自分の書きかけが足りないのか他人が回答中なのかが分からない
+  const claimable = v.topicPhase === 'open' && !v.answer && !empty;
+  const why = v.answer
+    ? iAnswer
+      ? 'あなたの回答を出しています'
+      : `${v.answer.playerName} さんの回答中`
+    : v.topicPhase !== 'open'
+      ? 'お題を待っています'
+      : empty
+        ? 'フリップに何か書くと押せます'
+        : '';
+
   return (
-    <div className="app">
-      {v.topicPhase === 'intro' ? (
-        /* 新しいお題は全画面で数秒。読み切ってからボードへ移る（SPEC.md §3.2） */
-        <TopicPlate key={v.topicId ?? 'intro'} text={v.topic ?? ''} deadline={v.deadline} />
-      ) : v.topicPhase === 'declared' ? (
-        <div className="declare">
-          <div>
-            <b>{v.answer?.playerName} さんが回答します</b>
-            <div className="rule" />
-            <small>この あと 公開</small>
-          </div>
-        </div>
-      ) : (
-        <>
-          {v.topic && <TopicStrip text={v.topic} />}
+    <div className="app game" data-phase={v.topicPhase} data-desk={deskShown ? 1 : 0}>
+      {/* declared のあいだサーバーは文を伏せる（v.topic が null）ので、帯は勝手に消える */}
+      {v.topic && v.topicPhase !== 'intro' && <TopicStrip text={v.topic} />}
 
-          {v.topicPhase === 'open' && (
-            <>
-              <FlipEditor flip={flip} onChange={setFlip} onActivity={(w) => r.setWriting(w)} />
-              <div className="act">
-                <button className="gold" disabled={empty || !!v.answer} onClick={() => r.claim(flip)}>
-                  回答する
-                </button>
-              </div>
-            </>
-          )}
-
-          {v.topicPhase === 'stage' && (
-            <div className="wait">
-              {iAnswer ? (
-                <button className="gold" style={{ padding: '20px 56px', fontSize: 22, letterSpacing: '.14em' }} onClick={() => r.reveal()}>
-                  公開する
-                </button>
-              ) : (
-                <span>{v.answer?.playerName} さんが公開するのを待っています</span>
-              )}
-            </div>
-          )}
-
-          {v.topicPhase === 'reveal' && v.answer?.flip && (
-            <>
-              <Reveal flip={v.answer.flip} name={v.answer.playerName} />
-              {iAnswer ? (
-                <p className="done">採点を待っています　<b>{v.answer.scored} / {v.answer.judges}</b> 人</p>
-              ) : v.answer.iScored ? (
-                <p className="done">採点しました　<b>{v.answer.scored} / {v.answer.judges}</b> 人</p>
-              ) : (
-                <div className="scores">
-                  {SCORES.map(([value, label, hot]) => (
-                    <button
-                      key={value}
-                      className={hot ? 'gold' : ''}
-                      onClick={() => {
-                        // **発表につながるタップは無音にする。** 最後の1人が押すと
-                        // そのまま集計→判定へ進むので、タップ音と判定の音が重なって
-                        // 濁る（senryu-game で一度そうなった）。判定の音が返事になる
-                        if (!lastJudge) play('tap');
-                        void r.score(value);
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
+      <div className="floor">
+        <div className="main">
+          {/* 場の主役。ここだけが場面ごとに中身を入れ替える */}
+          <div className="show">
+            {v.topicPhase === 'declared' && (
+              <div className="declare">
+                <div>
+                  <b>{v.answer?.playerName} さんが回答します</b>
+                  <div className="rule" />
+                  <small>この あと 公開</small>
                 </div>
-              )}
-            </>
-          )}
+              </div>
+            )}
 
-          {/* 集計と判定は1つの画面。**フリップを消して出し直さない。**
-              tally で「集計中…」の全画面を挟むと、公開で起こした板が一度消える。
-              key を回答ごとに切るのは、2人目の回答で必ず頭から流し直すため */}
-          {(v.topicPhase === 'tally' || v.topicPhase === 'result') && v.answer && (
-            <Closing
-              key={answerKey}
-              a={v.answer}
-              topicId={v.topicId}
-              phase={v.topicPhase}
-              deadline={v.deadline}
-              clock={clock}
-            />
-          )}
-        </>
-      )}
+            {v.topicPhase === 'stage' && (
+              <div className="wait">
+                {iAnswer ? (
+                  <button className="gold reveal-btn" onClick={() => r.reveal()}>公開する</button>
+                ) : (
+                  <span>{v.answer?.playerName} さんが公開するのを待っています</span>
+                )}
+              </div>
+            )}
 
-      {/* サーバーはもう次の画面に進んでいる。ここに残っているのは幕がめくれる 0.42 秒だけ */}
-      {leavingIntro && <TopicPlate key="outro" text={v.topic ?? ''} deadline={null} out />}
+            {v.topicPhase === 'reveal' && v.answer?.flip && (
+              <>
+                <Reveal flip={v.answer.flip} name={v.answer.playerName} />
+                {iAnswer ? (
+                  <p className="done">採点を待っています　<b>{v.answer.scored} / {v.answer.judges}</b> 人</p>
+                ) : v.answer.iScored ? (
+                  <p className="done">採点しました　<b>{v.answer.scored} / {v.answer.judges}</b> 人</p>
+                ) : (
+                  <div className="scores">
+                    {SCORES.map(([value, label, hot]) => (
+                      <button
+                        key={value}
+                        className={hot ? 'gold' : ''}
+                        onClick={() => {
+                          // **発表につながるタップは無音にする。** 最後の1人が押すと
+                          // そのまま集計→判定へ進むので、タップ音と判定の音が重なって
+                          // 濁る（senryu-game で一度そうなった）。判定の音が返事になる
+                          if (!lastJudge) play('tap');
+                          void r.score(value);
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
 
-      {canWrite && v.topicPhase !== 'open' && v.topicPhase !== 'declared' && (
-        <details style={{ marginTop: 24 }}>
-          <summary>次のネタを仕込む</summary>
-          <div style={{ marginTop: 12 }}>
-            <FlipEditor flip={flip} onChange={setFlip} onActivity={(w) => r.setWriting(w)} />
+            {/* 集計と判定は1つの画面。**フリップを消して出し直さない。**
+                tally で「集計中…」の全画面を挟むと、公開で起こした板が一度消える。
+                key を回答ごとに切るのは、2人目の回答で必ず頭から流し直すため */}
+            {(v.topicPhase === 'tally' || v.topicPhase === 'result') && v.answer && (
+              <Closing
+                key={answerKey}
+                a={v.answer}
+                topicId={v.topicId}
+                phase={v.topicPhase}
+                deadline={v.deadline}
+                clock={clock}
+              />
+            )}
           </div>
-        </details>
-      )}
 
-      <details style={{ marginTop: 18 }}>
-        <summary>オリジナルのお題を追加する（{v.handmadeCount}問たまっています）</summary>
-        <div className="card" style={{ marginTop: 12 }}>
-          <TopicForm myTopics={v.myTopics} count={v.handmadeCount} post={r.postTopic} remove={r.removeTopic} />
+          {/*
+            書く場所は**どの場面でも同じ場所に居座る**（SPEC.md §3.2）。
+            open のときだけ出す作りだと、誰かが回答してから判定が終わるまで
+            書く場所が消え、早い人が続けて回答すると書く時間がほとんど無くなる。
+
+            **DOM 上の位置を場面で動かさない**のが肝。動かすと React が
+            FlipEditor を作り直し、打っている途中でキャレットと選択中の箱が飛ぶ。
+          */}
+          <section className="desk">
+            <div className="bar">
+              <span className="ttl">自分のフリップ</span>
+              <span className="st">{why || '書けます'}</span>
+              <button className="fold" aria-expanded={deskShown} onClick={() => foldDesk(!deskOpen)}>
+                {deskShown ? '畳む' : '書く'}
+              </button>
+            </div>
+
+            {deskShown && (canWrite ? (
+              <>
+                <FlipEditor flip={flip} onChange={setFlip} onActivity={onActivity} />
+                <div className="act">
+                  <button className="gold" disabled={!claimable} onClick={() => r.claim(flip)}>
+                    回答する
+                  </button>
+                  {/* サーバーが断った理由をここに出す。ロビーには出しているのに
+                      本番の画面だけ握り潰していたので、「押しても何も起きない
+                      ボタン」になっていた（実際に動作確認で踏んだ） */}
+                  {r.error ? <p className="err">{r.error}</p> : why && <p className="why">{why}</p>}
+                </div>
+              </>
+            ) : (
+              // 回答者だけは書けない。判定が終わるとこの書きかけは使い切りになる
+              <p className="why">あなたの回答が場に出ています。判定が終わるまで待ってください</p>
+            ))}
+          </section>
+
+          <details className="extra">
+            <summary>オリジナルのお題を追加する（{v.handmadeCount}問たまっています）</summary>
+            <div className="card" style={{ marginTop: 12 }}>
+              <TopicForm myTopics={v.myTopics} count={v.handmadeCount} post={r.postTopic} remove={r.removeTopic} />
+            </div>
+          </details>
         </div>
-      </details>
 
-      <div className="dock">
-        <div className="inner">
-          <div className="seats">
+        {/*
+          プレイヤー一覧は右の固定幅の列。下の帯に横並びだったころは、
+          「書いています」が何人も点いたり消えたりするたびに折り返しが変わって
+          帯の高さごとチラついた。**幅を固定し、印の行に常に高さを持たせて**
+          出入りしても何も動かないようにしてある
+        */}
+        <aside className="side">
+          <div className="who">
             {v.players.map((p) => (
               <span key={p.id} className="seat" data-off={p.connected ? 0 : 1} data-ready={p.ready ? 1 : 0}>
-                {p.name}
-                {p.perfects > 0 && <span className="p">満点 {p.perfects}</span>}
-                {p.writing && <span className="w">書いています</span>}
+                <b className="nm">{p.name}</b>
+                <span className="st">
+                  {p.perfects > 0 && <span className="p">満点 {p.perfects}</span>}
+                  {/* 誰がホストかは進行中も要る。抜けると次の人へ渡るので、
+                      ロビーで見た顔ぶれのまま憶えていると当てにならない */}
+                  {p.isHost && <span className="host">ホスト</span>}
+                  {p.writing && <span className="w">書いています</span>}
+                  {!p.connected && <span className="w">切断中</span>}
+                </span>
               </span>
             ))}
           </div>
+        </aside>
+      </div>
+
+      {/* 新しいお題は全画面で数秒。読み切ってからボードへ移る（SPEC.md §3.2）。
+          **盤面と入れ替えず上に被せる。** 入れ替えると下の FlipEditor が
+          お題のたびに作り直され、書きかけの箱の選択が毎回外れる */}
+      {v.topicPhase === 'intro' && (
+        <TopicPlate key={v.topicId ?? 'intro'} text={v.topic ?? ''} deadline={v.deadline} />
+      )}
+      {/* サーバーはもう次の画面に進んでいる。ここに残っているのは幕がめくれる 0.42 秒だけ */}
+      {leavingIntro && <TopicPlate key="outro" text={v.topic ?? ''} deadline={null} out />}
+
+      <div className="dock">
+        <div className="inner">
           <SoundToggle />
           {me?.isHost && <button onClick={() => r.toLobby()}>ロビーへ</button>}
+          <LeaveButton onLeave={() => r.leave()} />
+          {/* 進行のボタンだけを右端へ寄せる。狭い画面ではこの隙間を畳んで
+              行を空ける（@media が display: none にする） */}
+          <span className="grow" />
           <button
-            className={me?.ready ? '' : 'gold'}
+            className={`agree${me?.ready ? '' : ' gold'}`}
             onClick={() => r.setReady(!me?.ready)}
           >
             {v.agree === 'reroll' ? 'お題を引き直す' : '次のお題に行く'}（{v.readyCount} / {v.aliveCount}人）
@@ -521,6 +609,36 @@ function Game({ r, v, flip, setFlip }: { r: R; v: V; flip: Flip; setFlip: (f: Fl
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * 部屋から抜ける。
+ *
+ * **一度確認を挟む。** 下の帯は連打される場所なので、押し間違いで席を捨てると
+ * 書きかけごと消える。別ウィンドウ（confirm）を出さないのは、
+ * ゲーム中に焦点を奪われると進行中の演出が止まって見えるため。
+ * その場でラベルが変わるだけにしてある。
+ */
+function LeaveButton({ onLeave }: { onLeave: () => void }) {
+  const [armed, setArmed] = useState(false);
+
+  useEffect(() => {
+    if (!armed) return;
+    // 確認したまま忘れると、次に触ったときに問答無用で抜けることになる。
+    // 数秒で元へ戻すのが、別ウィンドウを出さない代わりの安全弁
+    const t = window.setTimeout(() => setArmed(false), 4000);
+    return () => window.clearTimeout(t);
+  }, [armed]);
+
+  return (
+    <button
+      className={`leave${armed ? ' danger' : ''}`}
+      onClick={() => (armed ? onLeave() : setArmed(true))}
+      onBlur={() => setArmed(false)}
+    >
+      {armed ? 'ほんとに抜ける？' : '抜ける'}
+    </button>
   );
 }
 
