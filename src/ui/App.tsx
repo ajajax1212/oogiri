@@ -437,7 +437,7 @@ function Game({ r, v, flip, setFlip }: { r: R; v: V; flip: Flip; setFlip: (f: Fl
 
           {v.topicPhase === 'reveal' && v.answer?.flip && (
             <>
-              <FlipView flip={v.answer.flip} lift />
+              <Reveal flip={v.answer.flip} name={v.answer.playerName} />
               {iAnswer ? (
                 <p className="done">採点を待っています　<b>{v.answer.scored} / {v.answer.judges}</b> 人</p>
               ) : v.answer.iScored ? (
@@ -524,6 +524,37 @@ function Game({ r, v, flip, setFlip }: { r: R; v: V; flip: Flip; setFlip: (f: Fl
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * 公開の見せ場（SPEC.md §10.2）。「ためて・出して・止める」の3拍。
+ *
+ * 尺は効果音 lift の波形に合わせてある（頭 0.16 秒がほぼ無音の立ち上がり、
+ * 0.16〜0.24 秒が一撃、そこから 0.5 秒で落ちる）。**画を音より先に完成させると、
+ * 音が後追いの拍手のように聞こえる**ので、板が上がり切る瞬間を音の頂点へ置いた。
+ * 実際の数字は styles.css の @keyframes hoist 側にある（音の表は触らない）。
+ *
+ * 飾りの3枚を JSX に置いたのは、板の ::before / ::after が使えないため。
+ * 板は overflow: hidden なので、疑似要素で光らせると板の内側で切られて
+ * 「板の外へ漏れる光」にならない。並び順そのものが重なりの順序になっている。
+ *
+ * key を付けていないのは、phase が reveal を外れるとこの木ごと消えるから。
+ * 2人目の公開でも必ず頭から流れ直す。
+ */
+function Reveal({ flip, name }: { flip: Flip; name: string }) {
+  return (
+    <div className="reveal">
+      {/* 出どころを先に示す。暗闇からいきなり白が出ると、ためが単なる空白に見える */}
+      <div className="spot" aria-hidden="true" />
+      <div className="slit" aria-hidden="true" />
+      {/* 閃光は板より前に置く。板は position: relative なので後から描かれ、
+          光は板の縁からはみ出した分だけが見える（styles.css の .reveal .flash） */}
+      <div className="flash" aria-hidden="true" />
+      <FlipView flip={flip} lift />
+      {/* 名前は板が止まってから。同時に出すと視線が2つに割れる */}
+      <p className="by"><span>{name}</span> さんの回答</p>
     </div>
   );
 }

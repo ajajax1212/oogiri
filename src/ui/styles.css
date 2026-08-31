@@ -415,8 +415,6 @@ input::placeholder { color: #6d6143; }
 .tools .font { padding: 8px 12px; font-size: 15px; }
 .tools .range { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); }
 .tools .range input { width: 108px; accent-color: var(--yellow); }
-.board.lift { animation: lift .55s cubic-bezier(.2, .9, .25, 1) both; }
-@keyframes lift { from { opacity: 0; transform: translateY(70px) scale(.96); } to { opacity: 1; transform: none; } }
 
 .tools {
   display: flex;
@@ -474,7 +472,144 @@ input::placeholder { color: #6d6143; }
   letter-spacing: .16em;
 }
 
+/* --- 公開（reveal）--- */
+
+/* 番組の「めくり」の呼吸をそのまま尺にしてある。
+   ため 0〜0.15秒 → 一撃 0.20秒 → 止め 0.20〜0.60秒 → 名前 0.62秒 → 採点 0.72秒。
+   区切りは効果音 lift の実測波形（立ち上がり 0.16秒・頂点 0.16〜0.24秒・
+   減衰 0.5秒）から取った。**遅延を動かすときは音の波形も見直すこと。**
+
+   perspective はここに置く。板そのものに置くと rotateX が奥行きを持たず、
+   ただ縦に潰れるだけになって「起こしている」ように見えない。
+   視点を中央より下（62%）に取ったのは、板を見上げる位置に客席を置くため */
+.reveal {
+  position: relative;
+  perspective: 1100px;
+  perspective-origin: 50% 62%;
+}
+
+/* 板が出る前に灯る明かり。ための1.5秒を光の育ちで持たせる。
+   これが無いと、ためが「何も起きていない時間」になる */
+.reveal .spot {
+  position: absolute;
+  inset: -8% -10% -4%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 225, 0, .30), rgba(201, 162, 39, .10) 55%, transparent 78%);
+  animation: spot 1.5s cubic-bezier(.2, .8, .3, 1) both;
+}
+@keyframes spot {
+  0% { opacity: 0; transform: scale(.55); }
+  16% { opacity: 1; transform: scale(.92); }   /* 音が立ち上がり切るところ */
+  40% { opacity: .8; transform: scale(1.06); }
+  100% { opacity: .42; transform: scale(1); }
+}
+
+/* 板の出どころを示す金の一閃。板より 0.09 秒早く着かせて、
+   「線が走る → そこから板が起きる」の順に読ませる */
+.reveal .slit {
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 3px;
+  margin-top: -1.5px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--gold-hi) 30%, #fff 50%, var(--gold-hi) 70%, transparent);
+  animation: slit .52s cubic-bezier(.15, .85, .25, 1) both;
+}
+@keyframes slit {
+  0% { opacity: 0; transform: scaleX(.04); }
+  22% { opacity: 1; transform: scaleX(1); }
+  48% { opacity: .85; }
+  100% { opacity: 0; transform: scaleX(1.04); }
+}
+
+/* 掲げる。伏せた板を起こし、行き過ぎてから止める。
+   **動かすのは transform と box-shadow だけ**にしてある。板は
+   container-type: inline-size で、中の文字が cqw（＝板のレイアウト幅）で効く。
+   width や max-width を動かすと文字だけ別の速さで伸び縮みして、
+   書いた人の見た絵と場に出る絵がずれる。transform はレイアウト幅を変えない。
+
+   影を3枚に揃えてあるのは、枚数の違う box-shadow どうしを補間させると
+   足りない側が透明で後ろに詰められ、光と落ち影が対応しない組で混ざるため */
+.board.lift { animation: hoist .8s both; }
+@keyframes hoist {
+  0% {
+    opacity: 0;
+    transform: translateY(58px) rotateX(80deg) scale(.9);
+    box-shadow: 0 0 0 2px var(--gold), 0 0 0 0 rgba(255, 225, 0, 0), 0 10px 22px rgba(0, 0, 0, .9);
+    animation-timing-function: cubic-bezier(.3, .6, .4, 1);
+  }
+  /* ため。伏せたままの板が 0.1 秒だけ見えている。ここを暗転で飛ばすと
+     「出てくる前」が無くなり、一撃が始まりに聞こえる */
+  12% {
+    opacity: 1;
+    transform: translateY(54px) rotateX(74deg) scale(.92);
+    box-shadow: 0 0 0 2px var(--gold), 0 0 0 0 rgba(255, 225, 0, 0), 0 10px 22px rgba(0, 0, 0, .9);
+    animation-timing-function: cubic-bezier(.45, .05, .25, 1);
+  }
+  /* 一撃。0.21 秒＝音の頂点と重なる。行き過ぎてから戻る */
+  26% {
+    transform: translateY(-10px) rotateX(-6.5deg) scale(1.035);
+    box-shadow: 0 0 0 3px var(--gold-hi), 0 0 64px 12px rgba(255, 225, 0, .45), 0 24px 46px rgba(0, 0, 0, .8);
+    animation-timing-function: cubic-bezier(.4, 0, .3, 1);
+  }
+  46% { transform: translateY(4px) rotateX(2.6deg) scale(.994); animation-timing-function: cubic-bezier(.4, 0, .3, 1); }
+  66% { transform: translateY(-1.5px) rotateX(-1deg) scale(1.003); animation-timing-function: cubic-bezier(.4, 0, .3, 1); }
+  84% { transform: translateY(.5px) rotateX(.3deg) scale(.999); animation-timing-function: cubic-bezier(.4, 0, .3, 1); }
+  100% {
+    opacity: 1;
+    transform: none;
+    box-shadow: 0 0 0 2px var(--gold), 0 0 0 0 rgba(255, 225, 0, 0), 0 24px 46px rgba(0, 0, 0, .8);
+  }
+}
+
+/* 着地の閃光。**板より後ろに敷く**（DOM で板の前に置き、板は position: relative で
+   後から描かれる）。板の上に重ねると、白い紙に乗った黒い字がいちばん強く白ませて、
+   読ませたい 0.1 秒だけ回答が薄くなる。実際に screen で重ねて確かめて捨てた。
+   後ろなら、光は板の縁からはみ出した分だけが見える */
+.reveal .flash {
+  position: absolute;
+  inset: -10%;
+  pointer-events: none;
+  background: radial-gradient(farthest-side, rgba(255, 255, 255, .7), rgba(255, 225, 0, .4) 40%, transparent 72%);
+  animation: flash .42s ease-out 150ms both;
+}
+@keyframes flash { 0% { opacity: 0; } 18% { opacity: .85; } 100% { opacity: 0; } }
+
+/* 誰の回答か。板が止まってから置く */
+.reveal .by {
+  position: relative;
+  margin: 14px 0 0;
+  text-align: center;
+  color: var(--dim);
+  font-size: 13px;
+  letter-spacing: .18em;
+  animation: byin .42s ease .62s both;
+}
+.reveal .by span {
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: 17px;
+  letter-spacing: .1em;
+  color: var(--gold-hi);
+  margin-right: .5em;
+}
+@keyframes byin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* 名前の1行が増えた分だけ板の取り分を減らす。
+   減らさないと背の低いウィンドウで採点ボタンが下の帯に潜る */
+.reveal .board { --boardh: min(44vh, calc(100vh - 372px)); }
+
 /* --- 採点 --- */
+
+/* 板が止まるまで採点させない。めくりの途中で最後の1人が押せてしまうと、
+   板を読む間が消えるうえ、判定の音がめくりの音に重なって濁る。
+   backwards の待ちの間は visibility: hidden なので、
+   「見えないのに押せるボタン」にはならない（opacity だけだと押せてしまう） */
+.reveal ~ .scores, .reveal ~ .done { animation: showup .34s ease .72s backwards; }
+@keyframes showup {
+  from { opacity: 0; visibility: hidden; transform: translateY(8px); }
+  to { opacity: 1; visibility: visible; transform: none; }
+}
 
 .scores { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
 .scores button {
@@ -555,7 +690,17 @@ input::placeholder { color: #6d6143; }
 
 @media (prefers-reduced-motion: reduce) {
   .verdict.perfect::before { animation: none; }
-  .intro .lines span, .intro .bar, .board.lift, .strip, .declare { animation-duration: .01ms; }
+  .intro .lines span, .intro .bar, .strip, .declare { animation-duration: .01ms; }
+
+  /* 飾りだけの層は消す。消しても伝えている中身は無い（光と線と閃光） */
+  .reveal .slit, .reveal .flash { display: none; }
+  .reveal .spot { animation: none; opacity: .42; }
+  /* 長さだけ潰すと遅延が残り、採点ボタンが 0.72 秒空白のまま出てこない。
+     待たせる理由が演出しか無いので、遅延ごと畳む */
+  .board.lift, .reveal .by, .reveal ~ .scores, .reveal ~ .done {
+    animation-duration: .01ms;
+    animation-delay: 0s;
+  }
 }
 
 /* --- 参加者の帯 --- */
@@ -622,6 +767,7 @@ details > summary:hover { color: var(--gold-hi); }
   .app { padding: 16px 14px 128px; }
   .strip { margin: -16px -14px 14px; padding: 10px 12px 12px; }
   .board { --boardh: min(38vh, calc(100vh - 280px)); }
+  .reveal .board { --boardh: min(38vh, calc(100vh - 322px)); }
   .dock { padding: 8px 12px 10px; }
   .dock .inner { flex-wrap: wrap; gap: 8px; }
   /* flex: 1 は基準幅 0 なので width では折り返せない。基準幅ごと 100% にする */
