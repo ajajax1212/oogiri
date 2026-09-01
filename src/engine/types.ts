@@ -163,6 +163,8 @@ export type GameState = {
 /** 見返し用に控えた1枚。フリップと、そのときのお題と判定 */
 export type GalleryEntry = {
   id: string;
+  /** どのお題の回答か。**文で突き合わせない**（同じ文が二度出ても別の組） */
+  topicId: string;
   topicText: string;
   playerId: string;
   playerName: string;

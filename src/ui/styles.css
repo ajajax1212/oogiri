@@ -1032,6 +1032,10 @@ input::placeholder { color: #6d6143; }
     animation-duration: .01ms;
     animation-delay: 0s;
   }
+
+  /* 見返しは「開く／閉じる」だけの層なので、滑り込みは畳んで即座に出す。
+     出入りの向きは閉じるボタンの位置で分かるので、動きが無くても迷わない */
+  .gal, .gal-focus { animation-duration: .01ms; }
 }
 
 /* --- 下の帯（進行のボタンだけ）--- */
@@ -1105,6 +1109,235 @@ button.danger:hover:not(:disabled) { background: #3d1c16; border-color: #ff8f6a;
 details > summary { cursor: pointer; color: var(--dim); letter-spacing: .1em; font-size: 14px; }
 details > summary:hover { color: var(--gold-hi); }
 
+/* --- 見返し（今夜の回答）--- */
+
+/* **盤面の上に被せる層**。画面を差し替えないのは、下の FlipEditor を
+   mount したまま残すため（差し替えると書きかけの選択が毎回外れる）。
+
+   z-index は intro（60）と判定（40）より上に置く。見ているあいだに裏で
+   お題が変わっても、全画面の黄が突然かぶさって見返しが中断されない。
+   進行はサーバーが持っているので、覆っても止まらない */
+.gal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  /* 見出しと現況は常に見えたまま、一覧だけが動く。
+     minmax(0, 1fr) にしないと、中身の高さで行が伸びて一覧が画面外へ出る */
+  grid-template-rows: auto auto minmax(0, 1fr);
+  background: linear-gradient(180deg, #0b0a06 0%, #000 62%);
+  animation: galin .2s cubic-bezier(.2, .9, .25, 1) both;
+}
+@keyframes galin { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+.gal-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 11px 18px 12px;
+  background: var(--black);
+  border-bottom: 3px solid var(--gold);
+}
+.gal-head .ttl {
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: .16em;
+  color: var(--yellow);
+}
+.gal-head .n { color: var(--dim); font-size: 13px; letter-spacing: .08em; }
+.gal-head .n em { font-style: normal; color: var(--gold-hi); }
+/* 開いている間に増えた分。裏が進んでいることが分かれば、戻る頃合いを自分で決められる */
+.gal-head .fresh {
+  background: var(--yellow);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 900;
+}
+.gal-head .grow { flex: 1; }
+.gal-head .sort { display: flex; }
+.gal-head .sort button { padding: 6px 12px; font-size: 12px; border-radius: 0; }
+.gal-head .sort button:first-child { border-radius: 4px 0 0 4px; }
+/* 隣と枠線を共有する。2本重なると、選んでいないほうだけ太く見える */
+.gal-head .sort button:last-child { border-radius: 0 4px 4px 0; margin-left: -1px; }
+.gal-head .sort button[data-on='1'] { border-color: var(--yellow); color: var(--yellow); background: #2b2712; }
+
+/* 裏で進んでいる場面。**進行を止めない代わりに、止まっているのが自分のときだけ言う** */
+.gal-live {
+  margin: 0;
+  padding: 7px 18px 8px;
+  background: #14130f;
+  border-bottom: 1px solid var(--line);
+  color: var(--gold-hi);
+  font-size: 13px;
+  letter-spacing: .1em;
+}
+
+/* overscroll-behavior が要る。一覧の末尾で止めないと、そのまま裏のページが
+   スクロールして、閉じたときに別の場所へ飛ばされる */
+.gal-body { overflow-y: auto; overscroll-behavior: contain; padding: 16px 18px 28px; }
+
+.gal-group { margin-bottom: 26px; }
+/* お題は組の頭に貼り付ける。数十枚を流し読みしていると、今どのお題の回答を
+   見ているのかが画面から出ていってしまう */
+.gal-topic {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 14px 9px;
+  margin-bottom: 12px;
+  background: var(--yellow);
+  color: var(--ink);
+  border-bottom: 3px solid var(--black);
+}
+.gal-topic .tag { font-size: 10px; font-weight: 900; letter-spacing: .3em; color: #7a6a00; }
+.gal-topic b {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: clamp(15px, 2vw, 21px);
+  line-height: 1.3;
+  -webkit-text-stroke: .02em var(--ink);
+}
+.gal-topic .n { font-size: 12px; font-weight: 700; color: #7a6a00; white-space: nowrap; }
+
+.gal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(206px, 1fr)); gap: 14px; }
+
+.gal-tile {
+  display: block;
+  padding: 0;
+  text-align: left;
+  background: #100f0a;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.gal-tile:hover:not(:disabled) { background: #1b1910; border-color: var(--gold); }
+/* 枠の高さは 16:10 で先に決めておく。**画面の外にある升目は中身を描かない**
+   （content-visibility）。1晩で数十枚たまると、線と文字の層がその枚数だけ
+   積み上がってスクロールが重くなる。高さが CSS で決まっているので、
+   後回しにしても升目の位置は動かない */
+.gal-tile .frame { aspect-ratio: 16 / 10; content-visibility: auto; }
+/* **板そのものには transform も font-size も掛けない。** 板は
+   container-type: inline-size で中の文字が cqw で効くので、外側の幅を
+   絞れば中身ごと相似に縮む。--boardh（高さの上限）を無効にしておくのは、
+   一覧の板の大きさを升目の幅だけで決めたいため（画面の高さで揃わなくなる） */
+.gal-tile .board {
+  --boardh: 100vh;
+  border-width: 3px;
+  border-radius: 0;
+  box-shadow: 0 0 0 1px var(--gold-dk);
+}
+.gal-tile .cap { display: flex; align-items: center; gap: 8px; padding: 7px 10px 8px; }
+.gal-tile .cap .nm {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gal-tile .cap .v {
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  color: var(--dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+.gal-tile[data-v='big'] .cap .v { color: var(--gold-hi); border-color: var(--gold); }
+.gal-tile[data-v='none'] .cap .v { opacity: .55; }
+/* 満点大笑いだけは一覧の中でも別格にする。**この4段目があることが、
+   3段階の採点に意味を持たせている**ので、並べたときに埋もれさせない */
+.gal-tile[data-v='perfect'] {
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 1px var(--yellow), 0 0 26px rgba(255, 225, 0, .16);
+}
+.gal-tile[data-v='perfect'] .cap .v { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+
+/* 選んだ1枚。**一覧を消さずにもう1枚重ねる。** 差し替えると、閉じたときに
+   一覧が頭へ戻って「さっき見ていた場所」に帰れない */
+.gal-focus {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, .84);
+  animation: vdim .18s ease both;
+}
+.gal-focus .box { width: min(100%, 1020px); display: flex; flex-direction: column; gap: 12px; }
+.gal-focus .topic {
+  margin: 0;
+  text-align: center;
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: clamp(15px, 2.3vw, 24px);
+  line-height: 1.3;
+  padding: 8px 14px 10px;
+}
+/* 拡大でも幅だけを動かす。狭い画面の @media が .board へ直接 --boardh を
+   入れているので、継承では勝てない（詳細度で上回る形で書く） */
+.gal-focus .big, .gal-focus .big .board { --boardh: min(56vh, calc((100vw - 56px) / 1.6)); }
+.gal-focus .meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 0;
+}
+.gal-focus .meta .nm { font-family: var(--fat); font-size: 17px; letter-spacing: .1em; color: var(--gold-hi); }
+.gal-focus .meta .v {
+  font-family: var(--fat);
+  font-weight: 900;
+  font-size: 15px;
+  letter-spacing: .1em;
+  color: var(--gold-hi);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 3px 14px;
+}
+.gal-focus .meta .v[data-v='perfect'] { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.gal-focus .meta .cnt { color: var(--dim); font-size: 13px; letter-spacing: .12em; }
+.gal-focus .nav { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.gal-focus .nav .n { color: var(--dim); font-size: 13px; min-width: 76px; text-align: center; }
+
+.gal-empty { max-width: 520px; margin: 12vh auto 0; text-align: center; }
+.gal-empty b {
+  display: block;
+  margin-bottom: 14px;
+  font-family: var(--fat);
+  font-size: 22px;
+  letter-spacing: .12em;
+  color: var(--gold-hi);
+}
+.gal-empty p { color: var(--dim); font-size: 14px; line-height: 1.9; }
+
+/* 枚数の印。黄のボタンの上では黄が消えるので、そこだけ白黒を入れ替える */
+.gal-n {
+  margin-left: 8px;
+  background: var(--yellow);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 12px;
+  font-weight: 900;
+}
+button.gold .gal-n { background: var(--ink); color: var(--yellow); }
+
 /* --- 狭い画面 --- */
 
 /* 右の列が細くなりすぎる前に幅を1段落とす。196px のままだと、
@@ -1162,6 +1395,25 @@ details > summary:hover { color: var(--gold-hi); }
   .tools { gap: 6px; padding: 8px; }
   .tools input { flex: 1; min-width: 120px; }
   .act button { width: 100%; padding: 15px 10px; }
+
+  /* 見返し。**升目は2列を保つ。** 1列にすると1枚が大きく出て、
+     「何枚出たか」を掴むのにスクロールが要る（見返しの目的は1枚ずつ読むこと
+     ではなく、その晩の眺めを取り戻すこと）。読みたい1枚は押せば大きくなる */
+  .gal-head { padding: 9px 12px 10px; gap: 8px; }
+  .gal-head .ttl { font-size: 15px; }
+  .gal-head .n { font-size: 12px; }
+  .gal-head .sort button { padding: 5px 9px; }
+  .gal-live { padding: 6px 12px 7px; font-size: 12px; }
+  .gal-body { padding: 12px 12px 22px; }
+  .gal-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 9px; }
+  .gal-topic { padding: 7px 10px 8px; gap: 7px; margin-bottom: 10px; }
+  .gal-tile .cap { padding: 6px 8px; gap: 5px; }
+  .gal-tile .cap .nm { font-size: 12px; }
+  .gal-tile .cap .v { font-size: 10px; padding: 2px 6px; }
+  .gal-focus { padding: 10px; }
+  .gal-focus .big, .gal-focus .big .board { --boardh: min(46vh, calc((100vw - 40px) / 1.6)); }
+  .gal-focus .nav button { flex: 1 0 40%; padding: 10px 6px; font-size: 13px; }
+  .gal-focus .nav .n { flex: 1 0 100%; order: -1; }
 }
 
 /* --- 招待URLから来たとき --- */

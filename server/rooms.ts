@@ -18,6 +18,8 @@ export type Room = {
   timer: NodeJS.Timeout | null;
   /** 回答者の切断から回答権を解放するまでの猶予 */
   release: NodeJS.Timeout | null;
+  /** 最後に配った控えの枚数。増えたときだけ配り直すための目印 */
+  sentGallery: number;
   lastTouched: number;
 };
 
@@ -45,6 +47,7 @@ export function createRoom(data: TopicData): Room {
     source: new TopicSource(data, mulberry32(seed)),
     timer: null,
     release: null,
+    sentGallery: 0,
     lastTouched: Date.now(),
   };
   rooms.set(code, room);

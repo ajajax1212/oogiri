@@ -179,6 +179,7 @@ function closeScoring(s: GameState, ctx: Ctx): GameState {
   // 同じ状態から同じ結果が出なくなってテストが書けない）
   const entry = {
     id: `${s.topic?.id ?? '-'}|${a.playerId}|${s.gallery.length}`,
+    topicId: s.topic?.id ?? '-',
     topicText: s.topic?.text ?? '',
     playerId: a.playerId,
     playerName: byId(s, a.playerId)?.name ?? '',

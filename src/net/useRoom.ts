@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import type { Flip, Score } from '../engine/types';
+import type { Flip, GalleryEntry, Score } from '../engine/types';
 import type { View } from '../engine/view';
 import { EV } from './events';
 
@@ -43,6 +43,9 @@ type Ack = { ok: boolean; error?: string; code?: string; playerId?: string; toke
 
 export function useRoom() {
   const [view, setView] = useState<View | null>(null);
+  // 見返し用の控えは state とは別便で届く（events.ts の EV.gallery）。
+  // 画面からは view の一部に見えるように、ここで足して返す
+  const [gallery, setGallery] = useState<GalleryEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
   const sock = useRef<Socket | null>(null);
@@ -63,6 +66,7 @@ export function useRoom() {
     });
     s.on('disconnect', () => setConnected(false));
     s.on(EV.state, (v: View) => setView(v));
+    s.on(EV.gallery, (g: GalleryEntry[]) => setGallery(g));
     return () => { s.close(); };
   }, []);
 
@@ -137,8 +141,11 @@ export function useRoom() {
     }, WRITING_LINGER);
   }, [act]);
 
+  // 部屋を移ったら控えも持ち越さない
+  const shown = view ? { ...view, gallery } : null;
+
   return {
-    view, error, connected, setError,
+    view: shown, error, connected, setError,
     enter,
     leave: async () => { await call(EV.leave, {}); saveSeat(null); location.href = '/'; },
     addWord: (word: string, cat: string) => callShow(EV.word, { word, cat }),

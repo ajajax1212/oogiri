@@ -54,6 +54,22 @@ function broadcast(room: Room): void {
     if (d.code !== room.code || !d.playerId) continue;
     s.emit(EV.state, viewFor(room.state, room.code, d.playerId));
   }
+  pushGallery(room);
+}
+
+/**
+ * 見返し用の控えは**増えたときだけ**送る。
+ *
+ * state に相乗りさせると、「書いています」が切り替わるたびに、その晩の
+ * 全フリップ（線の座標込み）が全員へ再送される。手書きが混ざると1枚10KB級で、
+ * 50枚で 536KB を毎回配ることになる（実測）。控えは増える一方で書き換わらないので、
+ * 枚数が変わった瞬間だけ配れば足りる。
+ */
+function pushGallery(room: Room): void {
+  const n = room.state.gallery.length;
+  if (n === room.sentGallery) return;
+  room.sentGallery = n;
+  io.to(room.code).emit(EV.gallery, room.state.gallery);
 }
 
 const push = (room: Room) => () => broadcast(room);
@@ -66,6 +82,9 @@ function attach(socket: Socket, room: Room, playerId: string): void {
   clearRelease(room);
   schedule(room, push(room));
   broadcast(room);
+  // 入ってきた本人にはその時点の控えを1回渡す。broadcast は「増えたときだけ」なので、
+  // これが無いと途中から入った人や戻ってきた人の見返しが空のままになる
+  socket.emit(EV.gallery, room.state.gallery);
 }
 
 io.on('connection', (socket) => {

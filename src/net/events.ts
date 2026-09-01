@@ -24,6 +24,13 @@ export const EV = {
   toLobby: 'host:toLobby',
   action: 'game:action',
   state: 'state',
+  /**
+   * 見返し用の控え。**state とは別便で送る。**
+   * state は「書いています」が切り替わるたびに全員へ飛ぶので、そこに相乗りさせると
+   * その晩の全フリップ（線の座標込み）が毎回まるごと再送される。
+   * 手書きが増えると1回あたり数百KBになり、実測で50枚536KBだった
+   */
+  gallery: 'gallery',
 } as const;
 
 export type EventName = (typeof EV)[keyof typeof EV];

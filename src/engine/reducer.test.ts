@@ -371,14 +371,27 @@ describe('見返し用の控え（gallery）', () => {
     expect(s.gallery[0].id).toBe(`${topicId}|p1|0`);
   });
 
-  it('viewFor はそのまま配る（全部すでに公開された情報）', () => {
+  it('viewFor には載せない（state に相乗りさせると毎回まるごと再送される）', () => {
+    // 手書きが混ざると1枚10KB級。50枚で 536KB を「書いています」のたびに
+    // 配ることになる。控えは増える一方なので、増えたときだけ別便で送る
     let s = live(['p0', 'p1']);
     s = run(s, { type: 'ANSWER_CLAIM', playerId: 'p1', flip: drawn }, 1000);
     s = run(s, { type: 'TICK', now: 4000 }, 4000);
     s = run(s, { type: 'ANSWER_REVEAL', playerId: 'p1' }, 4000);
     s = run(s, { type: 'SCORE', playerId: 'p0', value: 2 }, 5000);
-    // 回答者本人にも、採点した側にも同じ控えが見える
-    expect(viewFor(s, 'ABCD', 'p0').gallery).toHaveLength(1);
-    expect(viewFor(s, 'ABCD', 'p1').gallery).toHaveLength(1);
+    expect(s.gallery).toHaveLength(1);
+    expect('gallery' in viewFor(s, 'ABCD', 'p0')).toBe(false);
+  });
+
+  it('同じ文のお題が二度出ても、別の組として区別できる', () => {
+    // 画面は topicId で組にする。文で突き合わせると、たまたま同じ文が
+    // 続いたときに別のお題の回答が1つの組に混ざる
+    let s = live(['p0', 'p1']);
+    const first = s.topic?.id;
+    s = run(s, { type: 'ANSWER_CLAIM', playerId: 'p1', flip: drawn }, 1000);
+    s = run(s, { type: 'TICK', now: 4000 }, 4000);
+    s = run(s, { type: 'ANSWER_REVEAL', playerId: 'p1' }, 4000);
+    s = run(s, { type: 'SCORE', playerId: 'p0', value: 2 }, 5000);
+    expect(s.gallery[0].topicId).toBe(first);
   });
 });

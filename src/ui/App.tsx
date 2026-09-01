@@ -5,6 +5,7 @@ import { CAT_LABEL, LIMIT } from '../net/events';
 import { codeFromUrl, useRoom } from '../net/useRoom';
 import { FlipEditor } from './FlipEditor';
 import { FlipView } from './Flip';
+import { Gallery, GalleryButton } from './Gallery';
 import { TopicForm } from './TopicForm';
 import { splitTopic, widestOf } from './topicLines';
 import { closingPlan, isRush, prefersReduced, RUNGS, seedOf, stepAt, type ClosingPlan } from './closing';
@@ -297,6 +298,7 @@ function Enter({ r }: { r: R }) {
 function Lobby({ r, v }: { r: R; v: V }) {
   const [word, setWord] = useState('');
   const [cat, setCat] = useState<keyof typeof CAT_LABEL>('person');
+  const [gallery, setGallery] = useState(false);
   const me = v.players.find((p) => p.id === v.me);
   const mine = v.brought.filter((b) => b.mine).length;
   const url = `${location.origin}/g/${v.code}`;
@@ -325,6 +327,26 @@ function Lobby({ r, v }: { r: R; v: V }) {
             </span>
           ))}
         </div>
+
+        {/*
+          見返しの入口をロビーの上のほうに置く。ゲームの合間に必ず戻ってくる場所で、
+          しかも**戻ってきた直後に見たいもの**なので、持ち寄り語やお題の投稿より前に出す。
+          1枚も無いうちは節ごと出さない。まだ何も起きていないロビーに、
+          開けても空の入口を置いても邪魔なだけ（本番の帯からはいつでも開ける）
+        */}
+        {v.gallery.length > 0 && (
+          <>
+            <div className="hr" />
+            <div>
+              <div className="sec">今夜の回答</div>
+              <p className="muted" style={{ margin: '8px 0 12px', fontSize: 14 }}>
+                判定が出た回答が{v.gallery.length}枚たまっています。
+                次のゲームを始めても消えません（部屋が続いているあいだ）。
+              </p>
+              <GalleryButton className="gold" n={v.gallery.length} onOpen={() => setGallery(true)} />
+            </div>
+          </>
+        )}
 
         <div className="hr" />
 
@@ -389,6 +411,8 @@ function Lobby({ r, v }: { r: R; v: V }) {
         </div>
         <p className="err">{r.error}</p>
       </div>
+
+      {gallery && <Gallery entries={v.gallery} onClose={() => setGallery(false)} />}
     </div>
   );
 }
@@ -403,6 +427,10 @@ function Game({ r, v, flip, setFlip }: { r: R; v: V; flip: Flip; setFlip: (f: Fl
   const leavingIntro = useLingering(v.topicPhase === 'intro', 420);
   // 自分が押したら採点が揃うか。scored は自分の分を含まない数
   const lastJudge = !!v.answer && v.answer.scored + 1 >= v.answer.judges;
+
+  // 見返しは**開いている本人の画面の都合**でしかないので、ここに持つ。
+  // サーバーへは何も送らない（誰が何を見ているかは進行に一切関係しない）
+  const [gallery, setGallery] = useState(false);
 
   // 畳んだかどうかは人の判断なので憶えておく。**場面ごとに開き直させない。**
   // open は書くための場面なので、畳んでいても必ず出す
@@ -592,9 +620,23 @@ function Game({ r, v, flip, setFlip }: { r: R; v: V; flip: Flip; setFlip: (f: Fl
       {/* サーバーはもう次の画面に進んでいる。ここに残っているのは幕がめくれる 0.42 秒だけ */}
       {leavingIntro && <TopicPlate key="outro" text={v.topic ?? ''} deadline={null} out />}
 
+      {/*
+        見返しは**盤面と入れ替えず上に被せる**（intro と同じ理由）。入れ替えると
+        下の FlipEditor が作り直され、開いて閉じただけで書きかけの箱の選択が外れる。
+        進行はサーバーが持っているので、見ているあいだも裏で宣言・公開・採点が進む。
+        閉じれば今の場面がそのまま出る
+      */}
+      {gallery && (
+        <Gallery entries={v.gallery} status={behindText(v, iAnswer)} onClose={() => setGallery(false)} />
+      )}
+
       <div className="dock">
         <div className="inner">
           <SoundToggle />
+          {/* 「さっきのあれ何だっけ」は遊んでいる最中に出るので、帯からも開ける。
+              **1枚も無くても出しておく。** 最初の判定が出た瞬間にボタンが増えると、
+              隣の「抜ける」の位置が動いて押し間違える */}
+          <GalleryButton n={v.gallery.length} onOpen={() => setGallery(true)} />
           {me?.isHost && <button onClick={() => r.toLobby()}>ロビーへ</button>}
           <LeaveButton onLeave={() => r.leave()} />
           {/* 進行のボタンだけを右端へ寄せる。狭い画面ではこの隙間を畳んで
@@ -610,6 +652,29 @@ function Game({ r, v, flip, setFlip }: { r: R; v: V; flip: Flip; setFlip: (f: Fl
       </div>
     </div>
   );
+}
+
+/**
+ * 見返しを開いているあいだ、裏で何が起きているかを1行で出す。
+ *
+ * **見ている人を強制的に呼び戻さない**（開いたまま次のお題に進んでも構わない）が、
+ * **自分の採点だけは全員を待たせる**。採点は接続中の全員が押すまで確定しないので、
+ * ここを黙っていると、見返しを開いた1人のせいで場が止まって理由も分からない。
+ */
+function behindText(v: V, iAnswer: boolean): string {
+  const name = v.answer?.playerName ?? '';
+  switch (v.topicPhase) {
+    case 'intro': return '新しいお題が出ました';
+    case 'open': return '回答を待っています';
+    case 'declared': return `${name} さんが回答します`;
+    case 'stage': return iAnswer ? 'あなたが公開するのを待っています' : `${name} さんが公開します`;
+    case 'reveal':
+      return !iAnswer && !v.answer?.iScored
+        ? 'あなたの採点を待っています'
+        : `${name} さんの回答を採点中`;
+    case 'tally': return '集計中';
+    case 'result': return '判定が出ています';
+  }
 }
 
 /**
