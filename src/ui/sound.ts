@@ -52,7 +52,11 @@ export type SfxName =
  * 「判定より宣言が大きい」のような崩れは表を見れば分かる。
  * 実際に各声へ渡す係数は `係数 × (peak / stack)`。
  *
- * `dur` は鳴り終わるまでの秒数。次の場面と被らないかを机上で確かめるために書く
+ * `dur` は**合成音**が鳴り終わるまでの秒数。**音源ファイルの長さではない。**
+ * ここを音源の長さと取り違えると、次の場面と被らないかの見積もりが丸ごと外れる
+ * （実際に、判定の声が 3.6 秒あるのに `dur` の 0.35 で見積もって、
+ *  声が鳴り終わる前に白紙のフリップへ切り替わっていた）。
+ * **音源の実測値は下の `FILES` の各行**に書いてある。尺を計算するときはそちらを見る
  * （intro 5.2秒 / declared 2.0秒 / tally 1.2秒 / result 4.5秒。engine 側の DELAY）。
  */
 type SfxSpec = {
@@ -95,19 +99,19 @@ const SFX: Record<SfxName, SfxSpec> = {
  * 測り直すときは decodeAudioData して全チャンネルの平均の絶対値の最大を取る。
  */
 const FILES: Partial<Record<SfxName, { url: string; gain: number }>> = {
-  strike: { url: '/sfx/strike.mp3', gain: 0.90 },   // お題発表.mp3（実測 0.28）
+  strike: { url: '/sfx/strike.mp3', gain: 0.90 },   // お題発表.mp3（実測 0.28 / 1.73秒）
   // 「回答するボタン.mp3」。回答権を取ったことを全員に知らせる合図なので、
   // 押した本人だけでなく全画面で鳴る（declared への切り替わりで1回）
-  declare: { url: '/sfx/declare.mp3', gain: 0.63 }, // 回答するボタン.mp3（実測 0.32）
-  lift: { url: '/sfx/lift.mp3', gain: 0.90 },       // 回答発表.mp3（実測 0.44）
-  tally: { url: '/sfx/tally.mp3', gain: 0.50 },     // 集計中.mp3（実測 0.43）
+  declare: { url: '/sfx/declare.mp3', gain: 0.63 }, // 回答するボタン.mp3（実測 0.32 / 1.21秒）
+  lift: { url: '/sfx/lift.mp3', gain: 0.90 },       // 回答発表.mp3（実測 0.44 / 1.01秒）
+  tally: { url: '/sfx/tally.mp3', gain: 0.50 },     // 集計中.mp3（実測 0.43 / 1.60秒）
   // 判定の4つだけ素材が飛び抜けて大きい（実測 0.76〜0.95。他は 0.28〜0.43）。
   // 実測から入れ直したうえで、さらに体感 -30% 落としてある。
   // 中が大より大きいという逆転もここで直る（素材は medium がいちばん大きい）
-  small: { url: '/sfx/small.wav', gain: 0.094 },    // 小笑い.wav（実測 0.76）
-  medium: { url: '/sfx/medium.wav', gain: 0.111 },  // 中笑い.wav（実測 0.89）
-  big: { url: '/sfx/big.wav', gain: 0.172 },        // 大笑い.wav（実測 0.77）
-  perfect: { url: '/sfx/perfect.wav', gain: 0.188 },// 満点大笑い.wav（実測 0.95）
+  small: { url: '/sfx/small.wav', gain: 0.094 },    // 小笑い.wav（実測 0.76 / 3.67秒）
+  medium: { url: '/sfx/medium.wav', gain: 0.111 },  // 中笑い.wav（実測 0.89 / 3.57秒）
+  big: { url: '/sfx/big.wav', gain: 0.172 },        // 大笑い.wav（実測 0.77 / 3.65秒）
+  perfect: { url: '/sfx/perfect.wav', gain: 0.188 },// 満点大笑い.wav（実測 0.95 / 3.70秒）
 };
 
 const buffers = new Map<SfxName, AudioBuffer>();
