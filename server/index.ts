@@ -4,10 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import express from 'express';
 import { Server, type Socket } from 'socket.io';
-import { handoffHost, setConnected, start, toLobby, type Ctx } from '../src/engine/reducer';
-import { viewFor } from '../src/engine/view';
+import { handoffHost, reduce, setConnected, start, toLobby, type Ctx } from '../src/engine/reducer';
+import { viewFor, type View } from '../src/engine/view';
 import type { Score } from '../src/engine/types';
-import { checkFlip, checkTopicText, checkWord, cleanName, EV, LIMIT } from '../src/net/events';
+import { checkFlip, checkTopicText, checkWord, cleanName, EV, LIMIT, type WritingPush } from '../src/net/events';
 import { apply, checkToken, clearRelease, createRoom, ctxOf, getRoom, schedule, scheduleRelease, seat, sweep, type Room } from './rooms';
 import { topicData } from './topicData';
 
@@ -44,7 +44,12 @@ app.get(['/', '/g/:code'], (_req, res) => {
   res.sendFile(path.join(dist, 'index.html'));
 });
 
-type SocketData = { code?: string; playerId?: string };
+type SocketData = {
+  code?: string;
+  playerId?: string;
+  /** この相手に最後に渡したフリップの鍵。同じ鍵なら二度送らない */
+  sentFlip?: string | null;
+};
 const sd = (s: Socket) => s.data as SocketData;
 
 /** 1人分に絞った状態を、部屋の全員にそれぞれ配る */
@@ -52,24 +57,48 @@ function broadcast(room: Room): void {
   for (const s of io.sockets.sockets.values()) {
     const d = sd(s);
     if (d.code !== room.code || !d.playerId) continue;
-    s.emit(EV.state, viewFor(room.state, room.code, d.playerId));
+    s.emit(EV.state, thinFlip(viewFor(room.state, room.code, d.playerId), d));
   }
   pushGallery(room);
 }
 
 /**
- * 見返し用の控えは**増えたときだけ**送る。
+ * 一度渡したフリップは、同じ相手に二度送らない。
  *
- * state に相乗りさせると、「書いています」が切り替わるたびに、その晩の
- * 全フリップ（線の座標込み）が全員へ再送される。手書きが混ざると1枚10KB級で、
- * 50枚で 536KB を毎回配ることになる（実測）。控えは増える一方で書き換わらないので、
- * 枚数が変わった瞬間だけ配れば足りる。
+ * 公開されたフリップは reveal / tally / result のあいだ、配信のたびに丸ごと乗っていた。
+ * 回答1つで8〜9回 × 人数ぶん同じ絵が飛ぶ。実測で手書き3000点なら6人で 1.85MB、
+ * 上限まで描かれると 24MB。中身は変わらないので、鍵が同じなら落としてよい。
+ * 受け手は鍵ごとに憶えていて、載っていなければ手元のものを使う（useRoom）。
+ *
+ * 繋ぎ直すと socket が変わって `sentFlip` も消えるので、そのときは必ずもう一度届く。
+ */
+function thinFlip(v: View, d: ReturnType<typeof sd>): View {
+  const key = v.answer?.flipKey ?? null;
+  if (key === null) { d.sentFlip = null; return v; }
+  if (d.sentFlip === key) return { ...v, answer: { ...v.answer!, flip: null } };
+  d.sentFlip = key;
+  return v;
+}
+
+/**
+ * 見返し用の控えは**増えたぶんだけ**送る。
+ *
+ * かつては state に相乗りさせていて、「書いています」が切り替わるたびに
+ * その晩の全フリップが飛んでいた。次に「増えたときだけ配列まるごと」に直したが、
+ * **これも駄目だった**。1件増えるたびに溜まった全部を送り直すので、
+ * 回答数の2乗で増える。実測で、40回やって4回に1回手書きが混じると、
+ * 判定のたびに1人あたり 359KB（6人で 2.1MB）が飛んでいた。
+ * これが「全員・PCでも・文字の回答でも重い」の正体だった。
+ *
+ * なので追記だけを送る。`from` は「この塊が控えの何番目から始まるか」。
+ * 席に着いた人へは from=0 で全部渡す（受け手はそこから作り直す）。
  */
 function pushGallery(room: Room): void {
   const n = room.state.gallery.length;
   if (n === room.sentGallery) return;
+  const from = room.sentGallery;
   room.sentGallery = n;
-  io.to(room.code).emit(EV.gallery, room.state.gallery);
+  io.to(room.code).emit(EV.gallery, { from, entries: room.state.gallery.slice(from) });
 }
 
 const push = (room: Room) => () => broadcast(room);
@@ -82,9 +111,9 @@ function attach(socket: Socket, room: Room, playerId: string): void {
   clearRelease(room);
   schedule(room, push(room));
   broadcast(room);
-  // 入ってきた本人にはその時点の控えを1回渡す。broadcast は「増えたときだけ」なので、
+  // 入ってきた本人にはその時点の控えを1回だけ全部渡す。以降は追記しか来ないので、
   // これが無いと途中から入った人や戻ってきた人の見返しが空のままになる
-  socket.emit(EV.gallery, room.state.gallery);
+  socket.emit(EV.gallery, { from: 0, entries: room.state.gallery });
 }
 
 io.on('connection', (socket) => {
@@ -260,9 +289,22 @@ io.on('connection', (socket) => {
       case 'NEXT_READY':
         apply(room, { type: 'NEXT_READY', playerId: me, ready: !!msg.ready }, on);
         return ack?.({ ok: true });
-      case 'WRITING':
-        apply(room, { type: 'WRITING', playerId: me, writing: !!msg.writing }, on);
+      case 'WRITING': {
+        // **これだけは state を配らない。** 6人いると常に誰かが書き始めたり
+        // 止めたりしていて、実測で毎秒3.8回、全員の画面が丸ごと作り直されていた。
+        // 伝えたいのは真偽値1つなので、それだけ配って画面側で差し替えてもらう。
+        // 状態はサーバーが持ったままなので、次の配信でも辻褄は合う
+        const before = room.state;
+        room.state = reduce(before, { type: 'WRITING', playerId: me, writing: !!msg.writing }, ctxOf(room));
+        // apply() を通さないので、部屋が使われている印は自分で押す。
+        // 押さないと「書いているだけの部屋」が放置扱いで掃除される
+        room.lastTouched = Date.now();
+        if (room.state !== before) {
+          const push: WritingPush = { playerId: me, writing: !!msg.writing };
+          io.to(room.code).emit(EV.writing, push);
+        }
         return ack?.({ ok: true });
+      }
       default:
         return ack?.({ ok: false });
     }

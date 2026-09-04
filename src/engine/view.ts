@@ -23,6 +23,8 @@ export type AnswerView = {
   playerName: string;
   /** 未公開のあいだは回答者本人にだけ配る */
   flip: Flip | null;
+  /** フリップの識別。中身が同じなら同じ鍵。null は「見せる相手ではない」 */
+  flipKey: string | null;
   /** 何人が押したか。誰が何を押したかは配らない */
   scored: number;
   judges: number;
@@ -80,6 +82,14 @@ export function viewFor(s: GameState, code: string, me: string): View {
           playerName: s.players.find((p) => p.id === a.playerId)?.name ?? '',
           // 公開前のフリップは本人にだけ。他人に配ると公開前に読める
           flip: revealed || a.playerId === me ? a.flip : null,
+          /**
+           * このフリップの識別。**同じ鍵なら中身は同じ**なので、送り側は
+           * 一度配った鍵のフリップを二度と載せない（server/index.ts の broadcast）。
+           * 鍵が変わるのは「別の人が回答した」「公開されて見える人が増えた」ときだけ
+           */
+          flipKey: revealed || a.playerId === me
+            ? `${a.playerId}|${s.topic?.id ?? '-'}|${revealed ? 'r' : 'm'}`
+            : null,
           scored: Object.keys(a.scores).length,
           judges,
           iScored: !!a.scores[me],

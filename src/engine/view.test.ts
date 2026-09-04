@@ -127,3 +127,30 @@ describe('viewFor が配るもの', () => {
     expect(json(s, 'p1')).not.toContain('byId');
   });
 });
+
+describe('flipKey（同じフリップを二度送らないための鍵）', () => {
+  const drawn = { strokes: [{ color: 'black' as const, width: 2 as const, points: [0, 0, 10, 10] }], texts: [] };
+
+  it('公開前は本人にだけ鍵が付き、他人には付かない', () => {
+    const s = base({ topicPhase: 'stage', answer: { playerId: 'p1', flip: drawn, scores: {}, tally: null } });
+    expect(viewFor(s, 'ABCD', 'p1').answer?.flipKey).not.toBeNull();
+    expect(viewFor(s, 'ABCD', 'p0').answer?.flipKey).toBeNull();
+    expect(viewFor(s, 'ABCD', 'p0').answer?.flip).toBeNull();
+  });
+
+  it('公開の前後で鍵が変わる。変わらないと、見えるようになった人に届かない', () => {
+    const a = { playerId: 'p1', flip: drawn, scores: {}, tally: null };
+    const before = viewFor(base({ topicPhase: 'stage', answer: a }), 'ABCD', 'p1').answer?.flipKey;
+    const after = viewFor(base({ topicPhase: 'reveal', answer: a }), 'ABCD', 'p1').answer?.flipKey;
+    expect(before).not.toBe(after);
+  });
+
+  it('公開後は全員に同じ鍵が付く', () => {
+    const s = base({ topicPhase: 'reveal', answer: { playerId: 'p1', flip: drawn, scores: {}, tally: null } });
+    expect(viewFor(s, 'ABCD', 'p0').answer?.flipKey).toBe(viewFor(s, 'ABCD', 'p1').answer?.flipKey);
+  });
+
+  it('回答が無ければ鍵も無い', () => {
+    expect(viewFor(base({ answer: null }), 'ABCD', 'p0').answer).toBeNull();
+  });
+});

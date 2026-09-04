@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import type { Flip, GalleryEntry, Score } from '../engine/types';
 import type { View } from '../engine/view';
-import { EV } from './events';
+import { EV, type GalleryPush, type WritingPush } from './events';
 
 /** 手が止まってから「書いています」を消すまで。線の切れ目で消えない長さ */
 const WRITING_LINGER = 1600;
@@ -46,6 +46,8 @@ export function useRoom() {
   // 見返し用の控えは state とは別便で届く（events.ts の EV.gallery）。
   // 画面からは view の一部に見えるように、ここで足して返す
   const [gallery, setGallery] = useState<GalleryEntry[]>([]);
+  /** 最後に受け取ったフリップ。同じ鍵の配信には載ってこないので、ここから戻す */
+  const flipCache = useRef<{ key: string; flip: Flip } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
   const sock = useRef<Socket | null>(null);
@@ -65,8 +67,29 @@ export function useRoom() {
       }
     });
     s.on('disconnect', () => setConnected(false));
-    s.on(EV.state, (v: View) => setView(v));
-    s.on(EV.gallery, (g: GalleryEntry[]) => setGallery(g));
+    s.on(EV.state, (v: View) => {
+      // フリップは鍵ごとに憶えておく。同じ鍵のものは載ってこない（server の thinFlip）
+      const key = v.answer?.flipKey ?? null;
+      if (key === null) { flipCache.current = null; }
+      else if (v.answer?.flip) { flipCache.current = { key, flip: v.answer.flip }; }
+      setView(v);
+    });
+    // 控えは追記で届く。from=0 のときだけ入れ替え、あとは continuity を見て継ぎ足す
+    s.on(EV.gallery, (g: GalleryPush) => {
+      setGallery((cur) => {
+        if (g.from === 0) return g.entries;
+        // 取りこぼしていたら継ぎ足せない。次の全部入りを待つより、
+        // 手元にあるところまでを残して先へ進める（見返しは進行を止めない）
+        if (g.from > cur.length) return cur;
+        return [...cur.slice(0, g.from), ...g.entries];
+      });
+    });
+    // 「書いています」だけの通知。state を配らせないために別便にしてある
+    s.on(EV.writing, (w: WritingPush) => {
+      setView((cur) => (cur
+        ? { ...cur, players: cur.players.map((p) => (p.id === w.playerId ? { ...p, writing: w.writing } : p)) }
+        : cur));
+    });
     return () => { s.close(); };
   }, []);
 
@@ -141,8 +164,18 @@ export function useRoom() {
     }, WRITING_LINGER);
   }, [act]);
 
-  // 部屋を移ったら控えも持ち越さない
-  const shown = view ? { ...view, gallery } : null;
+  // 画面からは今まで通り1つの view に見せる。
+  // 載ってこなかったフリップは、鍵が合っていれば手元のものを戻す
+  const cached = flipCache.current;
+  const shown = view
+    ? {
+        ...view,
+        gallery,
+        answer: view.answer && !view.answer.flip && cached && cached.key === view.answer.flipKey
+          ? { ...view.answer, flip: cached.flip }
+          : view.answer,
+      }
+    : null;
 
   return {
     view: shown, error, connected, setError,

@@ -1,3 +1,4 @@
+import type { GalleryEntry } from '../engine/types';
 import {
   FLIP_H, FLIP_W, FONTS, TEXT_MAX, TEXT_MIN,
   type BroughtWord, type Flip,
@@ -25,12 +26,16 @@ export const EV = {
   action: 'game:action',
   state: 'state',
   /**
-   * 見返し用の控え。**state とは別便で送る。**
-   * state は「書いています」が切り替わるたびに全員へ飛ぶので、そこに相乗りさせると
-   * その晩の全フリップ（線の座標込み）が毎回まるごと再送される。
-   * 手書きが増えると1回あたり数百KBになり、実測で50枚536KBだった
+   * 見返し用の控え。**state とは別便で、増えたぶんだけ**送る（`GalleryPush`）。
+   * 全部を送り直すと回答数の2乗で増え、実測で40回・6人で判定のたびに 2.1MB 飛んでいた
    */
   gallery: 'gallery',
+  /**
+   * 「書いています」だけの小さな通知。
+   * これのために state を全員へ配ると、6人だと**毎秒3.8回**画面が丸ごと作り直される
+   * （実測）。伝えたいのは真偽値1つなので、それだけ送る
+   */
+  writing: 'writing',
 } as const;
 
 export type EventName = (typeof EV)[keyof typeof EV];
@@ -123,3 +128,9 @@ export const CAT_LABEL: Record<BroughtWord['cat'], string> = {
   place: 'どこ',
   act: 'すること',
 };
+
+/** 控えの追記。`from` は控えの何番目から始まる塊か。0 なら全部入れ替え */
+export type GalleryPush = { from: number; entries: GalleryEntry[] };
+
+/** 「書いています」の切り替えだけを配る */
+export type WritingPush = { playerId: string; writing: boolean };
